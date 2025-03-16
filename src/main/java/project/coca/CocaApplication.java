@@ -10,19 +10,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class CocaApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CocaApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(CocaApplication.class, args);
+    }
 
-	@Bean
-	public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:3000")
-						.allowedMethods("OPTIONS", "GET", "POST", "PUT", "DELETE");
-			}
-		};
-	}
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("OPTIONS", "GET", "POST", "PUT", "DELETE");
+            }
+        };
+    }
 }

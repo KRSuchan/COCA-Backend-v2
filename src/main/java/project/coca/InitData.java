@@ -10,9 +10,9 @@ import project.coca.domain.group.CoGroup;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Interest;
 import project.coca.domain.tag.Tag;
-import project.coca.repository.InterestRepository;
-import project.coca.repository.MemberRepository;
-import project.coca.repository.TagRepository;
+import project.coca.v1.repository.InterestRepository;
+import project.coca.v1.repository.MemberRepository;
+import project.coca.v1.repository.TagRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,9 +26,9 @@ public class InitData {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initData() throws IOException {
-        log.info("data initialize 시작");
+//        log.info("data initialize 시작");
 //        initService.init();
-        log.info("data initialize 끝");
+//        log.info("data initialize 끝");
     }
 
     @RequiredArgsConstructor

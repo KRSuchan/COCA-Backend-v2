@@ -16,7 +16,7 @@ public class GroupNotice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "GROUP_NOTICE_ID")
     private Long id;
-    
+
     @Column(name = "CONTENTS", length = 500, nullable = false)
     private String contents;
 

@@ -1,31 +1,7 @@
-jwt:
-  secret: your service jwt secret key
 spring:
-  output:
-    ansi:
-      enabled: always
-  data:
-    redis:
-      port: 6379
-      host: localhost
-  datasource:
-    url: jdbc:mysql://127.0.0.1:3306/COCA?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
-    username: your mysql username
-    password: your mysql password
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-  cloud:
-    aws:
-      credentials:
-        access-key: secret access key
-        secret-key: secret key
-      s3:
-        bucket: your bucket name
-      region:
-        static: your region name
+  profiles:
+    active: prod
+---
+spring:
+  profiles:
+    active: local
