@@ -1,11 +1,14 @@
 
-![](https://github.com/user-attachments/assets/b564ebf3-897d-4df5-977e-cfb3139599e1) | ![](https://github.com/user-attachments/assets/34cdc9da-fb51-4963-b57d-00a8c95764d6)
----|---|
 # COCA Backend
 
 이 프로젝트는 **COCA** 서비스의 백엔드입니다.  
-Spring Boot 기반으로 개발되었으며, REST API를 제공합니다.  
+COCA 시스템은 사용자 중심의 일정 관리 및 그룹 협업 플랫폼을 제공함으로써 일상생활, 학업, 업무 등 다양한 분야에서의 효율적인 일정 관리와 소통을 목표로 합니다.  
+본 시스템은 사용자가 직면할 수 있는 일정 관리의 불편함을 해소하고, 개인 및 그룹 단위의 일정 공유와 관리를 원활하게 하여 개인의 생산성 향상과 그룹 간 협업을 촉진합니다.  
+소프트웨어의 주요 기능을 통해 COCA 시스템은 사용자가 개인 및 그룹 일정을 효율적으로 관리하고, 다른 사용자들과의 협업과 소통을 원활하게 하는 플랫폼을 제공함으로써, 사용자의 생산성과 협업 효율을 극대화하는 것을 목적으로 합니다.  
+  
 **COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com/kit-COCA/cocaFront2)를 참고해주세요.
+![](https://github.com/user-attachments/assets/b564ebf3-897d-4df5-977e-cfb3139599e1) | ![](https://github.com/user-attachments/assets/34cdc9da-fb51-4963-b57d-00a8c95764d6)
+---|---|
 
 ## 👨‍💻👩‍💻 역할 분담
 - **이수찬**: 프로젝트 총괄, DB 설계, 시스템 구조 설계, Spring 백엔드 구현  
