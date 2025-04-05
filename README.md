@@ -1,3 +1,6 @@
+
+![](https://github.com/user-attachments/assets/b564ebf3-897d-4df5-977e-cfb3139599e1) | ![](https://github.com/user-attachments/assets/34cdc9da-fb51-4963-b57d-00a8c95764d6)
+---|---|
 # COCA Backend
 
 이 프로젝트는 **COCA** 서비스의 백엔드입니다.  
@@ -6,19 +9,19 @@ Spring Boot 기반으로 개발되었으며, REST API를 제공합니다.
 
 ## 👨‍💻👩‍💻 역할 분담
 - **이수찬**: 프로젝트 총괄, DB 설계, 시스템 구조 설계, Spring 백엔드 구현  
-- **이상헌**: 프론트 서버 통신 구현, 핵심 알고리즘(빈일정) 설계 및 구현, CORS 관리, Spring 백엔드 보조, 프론트 UI 보조  
+- **이상헌**: 프론트 서버 통신 구현, 핵심 알고리즘(빈일정) 구현, CORS 관리, Spring 백엔드 보조, 프론트 UI 보조  
 - **임희열**: React UI/UX 설계 및 구현, 프론트 서버 통신 보조  
-- **이채연**: Spring 백엔드 구현, 프론트 서버 통신 보조, 핵심 알고리즘(MD5) 구현 및 적용  
+- **이채연**: Spring 백엔드 구현, 프론트 서버 통신 보조, 핵심 알고리즘(MD5) 구현  
 
 ## 🚀 기술 스택
 - **Language**: Java 17
 - **Framework**: Spring Boot 3.2.5, Spring Security 6.2.4
 - **File Storage**: AWS S3 (첨부파일 관리)
 - **Database**: MySQL
-- **Caching**: Redis
+- **Token Management**: Redis (JWT 관리)
 - **API Documentation**: Notion
 
-## 📌 주요 기능 
+## 📌 주요 기능(42) 
 - **회원 관리**(6): 회원 가입, 로그인, 로그아웃, 개인 정보 조회 및 수정, 회원 탈퇴
 - **일정 관리**(14): 빈 일정 찾기, 개인 일정 관리(CRUD), 그룹 일정 관리(CRUD) 등 14개 기능
 - **그룹 관리**(10): 그룹 관리(CRUD), 그룹 공지 관리(CRUD) 등 10개 기능
@@ -55,16 +58,15 @@ cocaBack/
     └── ...
 ```
 ## 📊 ERD  
-ERD(Entity Relationship Diagram)는 현재 정리 중이며, 업데이트될 예정입니다.  
-추후 [📂 프로젝트 문서](https://github.com/kit-COCA/cocaBack/tree/main/documents)에서 확인하실 수 있습니다.
+![COCA_DB 설계V3](https://github.com/user-attachments/assets/5ee2763c-56c9-4e09-9320-d15bb307c0bc)
 
-## 클래스 다이어그램
+## 🧱 클래스 다이어그램
 ### 빈일정 찾기 시스템 클래스
 ![image](https://github.com/user-attachments/assets/6872a2a2-3b63-4f8c-9ce1-b0907c6cf2b5)
 자세한 클래스 다이어그램은 프로젝트 문서 혹은 리뷰 블로그 참고 바랍니다.  
 [3. 설계명세서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/kit-COCA/cocaBack/blob/main/documents/3.%20%E1%84%89%E1%85%A5%E1%86%AF%E1%84%80%E1%85%A8%E1%84%86%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A6%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)    
 [5. 최종보고서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/kit-COCA/cocaBack/blob/main/documents/5.%20%E1%84%8E%E1%85%AC%E1%84%8C%E1%85%A9%E1%86%BC%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)  
-혹은 [COCA 시스템 블로그 리뷰](https://velog.io/@lsc4814/COCA-v1-%EA%B5%AC%ED%98%84-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%A6%AC%EB%B7%B0)를 참고해주세요
+혹은 [COCA 시스템 개발 리뷰](https://velog.io/@lsc4814/COCA-v1-%EA%B5%AC%ED%98%84-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%A6%AC%EB%B7%B0)를 참고해주세요
 
 ## ⚙️ 실행 방법
 ### 1. 환경 변수 설정
