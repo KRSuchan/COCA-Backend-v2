@@ -10,9 +10,9 @@ import project.coca.domain.group.CoGroup;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Interest;
 import project.coca.domain.tag.Tag;
-import project.coca.v1.repository.InterestRepository;
-import project.coca.v1.repository.MemberRepository;
-import project.coca.v1.repository.TagRepository;
+import project.coca.member.InterestRepository;
+import project.coca.member.MemberRepository;
+import project.coca.member.TagRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
