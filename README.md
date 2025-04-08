@@ -2,7 +2,7 @@
 # 📅 COCA Backend
 
 이 프로젝트는 **COCA** 서비스의 백엔드입니다. 
-**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com/kit-COCA/cocaFront2)를 참고해주세요.
+**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.
 ### 프로젝트 개요
 COCA 프로젝트는 사용자 간 일정 공유와 협업을 지원하는 서비스로, 개인 일정뿐 아니라 그룹 단위의 일정 조율까지 한 번에 관리할 수 있는 플랫폼입니다.
 Spring Security와 JWT를 기반으로 한 안정적인 인증 시스템을 통해 세션을 관리하며, 사용자 간의 효율적인 소통과 협업을 가능하게 합니다.
@@ -46,13 +46,14 @@ COCA 백엔드에서 제공하는 API 명세서는 아래 Notion 페이지에서
 ```
 cocaBack/
     ├── src/main/java/project/coca
-        ├── controller  # API 컨트롤러
-        ├── service     # 비즈니스 로직
-        ├── repository  # 데이터베이스 처리
+        ├── auth        # 인증 관련 패키지
+        ├── common      # error, dto 양식 패키지
         ├── domain      # 도메인 클래스
-        ├── dto         # DTO 클래스
-        ├── jwt         # JWT 클래스
-        ├── config      # 설정 파일
+        ├── friend      # 친구 관리 패키지
+        ├── group       # 그룹 관리 패키지
+        ├── member      # 회원 관리 패키지
+        ├── request     # 요청 관리 패키지
+        ├── schedule    # 일정 관리 패키지
         ├── CocaApplication.java      # SpringBoot main
         └── InitData.java             # 시작 데이터 구성 클래스
     ├── src/main/resources/
@@ -70,8 +71,8 @@ cocaBack/
 ### 빈일정 찾기 시스템 클래스
 ![image](https://github.com/user-attachments/assets/6872a2a2-3b63-4f8c-9ce1-b0907c6cf2b5)
 자세한 클래스 다이어그램은 프로젝트 문서 혹은 리뷰 블로그 참고 바랍니다.  
-[3. 설계명세서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/kit-COCA/cocaBack/blob/main/documents/3.%20%E1%84%89%E1%85%A5%E1%86%AF%E1%84%80%E1%85%A8%E1%84%86%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A6%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)    
-[5. 최종보고서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/kit-COCA/cocaBack/blob/main/documents/5.%20%E1%84%8E%E1%85%AC%E1%84%8C%E1%85%A9%E1%86%BC%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)  
+[3. 설계명세서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/KRSuchan/COCA-Backend-v2/blob/main/documents/3.%20%E1%84%89%E1%85%A5%E1%86%AF%E1%84%80%E1%85%A8%E1%84%86%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A6%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)    
+[5. 최종보고서(이수찬, 이상헌, 임희열, 이채연)v1.pdf](https://github.com/KRSuchan/COCA-Backend-v2/blob/main/documents/5.%20%E1%84%8E%E1%85%AC%E1%84%8C%E1%85%A9%E1%86%BC%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5(%E1%84%8B%E1%85%B5%E1%84%89%E1%85%AE%E1%84%8E%E1%85%A1%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A1%E1%86%BC%E1%84%92%E1%85%A5%E1%86%AB%2C%20%E1%84%8B%E1%85%B5%E1%86%B7%E1%84%92%E1%85%B4%E1%84%8B%E1%85%A7%E1%86%AF%2C%20%E1%84%8B%E1%85%B5%E1%84%8E%E1%85%A2%E1%84%8B%E1%85%A7%E1%86%AB)v1.pdf)  
 혹은 [COCA 시스템 개발 리뷰](https://velog.io/@lsc4814/COCA-v1-%EA%B5%AC%ED%98%84-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%A6%AC%EB%B7%B0)를 참고해주세요
 
 ## ⚙️ 실행 방법
@@ -105,4 +106,4 @@ spring:
 java -jar build/libs/cocaBack-0.0.1-SNAPSHOT.jar
 ```
 ---
-#### 더 자세한 내용은 [프로젝트 문서](https://github.com/kit-COCA/cocaBack/tree/main/documents)를 참고해주세요.
+#### 더 자세한 내용은 [프로젝트 문서](https://github.com/KRSuchan/COCA-Backend-v2/tree/main/documents)를 참고해주세요.
