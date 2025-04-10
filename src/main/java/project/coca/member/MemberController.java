@@ -1,6 +1,6 @@
 package project.coca.member;
 
-import org.springframework.context.annotation.ComponentScan;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +19,11 @@ import javax.naming.AuthenticationException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-@ComponentScan
 @RequestMapping("/api/member")
 @RestController
+@RequiredArgsConstructor
 public class MemberController {
     private final MemberService memberService;
-
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
-    }
 
     @GetMapping("/memberProfileImageUrlReq")
     public ApiResponse<String> MemberProfileImageUrlReq(@RequestParam String memberId) {
