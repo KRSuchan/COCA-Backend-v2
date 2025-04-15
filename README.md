@@ -26,6 +26,7 @@ COCA 프로젝트의 목표는 사용자가 개인 및 그룹 일정을 손쉽�
 - **Database**: MySQL
 - **Token Management**: Redis (JWT 관리)
 - **API Documentation**: Notion
+- **Frontend**: JavaScript, React.js
 
 ## 📌 주요 기능(42) 
 - **회원 관리**(6): 회원 가입, 로그인, 로그아웃, 개인 정보 조회 및 수정, 회원 탈퇴
