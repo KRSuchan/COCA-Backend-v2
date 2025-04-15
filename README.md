@@ -77,7 +77,16 @@ cocaBack/
 혹은 [COCA 시스템 개발 리뷰](https://velog.io/@lsc4814/COCA-v1-%EA%B5%AC%ED%98%84-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%A6%AC%EB%B7%B0)를 참고해주세요
 
 ## ⚙️ 실행 방법
-### 1. 환경 변수 설정
+### 0. 사전 설치
+- docker
+- java 17
+- redis
+
+### 1. redis 설치 및 실행
+```
+docker run --name redis -p 6379:6379 -d redis
+```
+### 2. 환경 변수 설정
 `cocaBack/src/main/resources/application.yml`을 아래 내용을 참고하여 수정합니다:
 ```yaml
 jwt:
@@ -100,7 +109,7 @@ spring:
       region:
         static: your-region
 ```
-### 2. `.jar` 파일 생성 및 실행
+### 3. `.jar` 파일 생성 및 실행
 터미널에서 아래 내용 입력 후 Enter:
 ``` 
 ./gradlew build
