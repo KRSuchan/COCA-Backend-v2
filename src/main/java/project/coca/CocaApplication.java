@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class CocaApplication {
-    // ci test
+    // ci test v2504231120
     public static void main(String[] args) {
         SpringApplication.run(CocaApplication.class, args);
     }
