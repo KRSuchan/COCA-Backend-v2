@@ -26,9 +26,9 @@ public class InitData {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initData() throws IOException {
-//        log.info("data initialize 시작");
-//        initService.init();
-//        log.info("data initialize 끝");
+        log.info("data initialize 시작");
+        initService.init();
+        log.info("data initialize 끝");
     }
 
     @RequiredArgsConstructor

@@ -85,7 +85,7 @@ public class S3Service {
      */
     @Transactional
     public void deleteS3File(String url) {
-        String key = url.replace("https://cocaattachments.s3.amazonaws.com/", "");
+        String key = url.replace("https://coca-attachments.s3.amazonaws.com/", "");
         System.out.println(key);
         s3Operations.deleteObject(BUCKET, key);
     }
