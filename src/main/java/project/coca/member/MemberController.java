@@ -43,7 +43,7 @@ public class MemberController {
     @PostMapping("/validate-id")
     public ApiResponse<Boolean> checkDuplicationId(@RequestBody MemberUpdateRequest memberRequest) {
         try {
-            return ApiResponse.response(ResponseCode.OK, memberService.checkDuplicationId(memberRequest.getId()));
+            return ApiResponse.response(ResponseCode.OK, memberService.isUsable(memberRequest.getId()));
         } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "예상 못한 에러, 로그 :" + e.getMessage());
         }

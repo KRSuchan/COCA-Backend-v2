@@ -1,5 +1,6 @@
 package project.coca.member;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,30 +31,23 @@ import java.util.NoSuchElementException;
 
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
     private final TagRepository tagRepository;
     private final InterestRepository interestRepository;
     private final JwtRedisService jwtRedisService;
-    private final String DEFAULT_PROFILE_IMAGE_PATH = "https://cocaattachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
+    private final String DEFAULT_PROFILE_IMAGE_PATH = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
     private final S3Service s3Service;
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider jwtTokenProvider;
 
-    public MemberService(MemberRepository memberRepository,
-                         TagRepository tagRepository,
-                         InterestRepository interestRepository, AuthenticationManager AuthenticationManager, JwtTokenProvider jwtTokenProvider, JwtRedisService jwtRedisService, S3Service s3Service) {
-        this.memberRepository = memberRepository;
-        this.tagRepository = tagRepository;
-        this.interestRepository = interestRepository;
-        this.authenticationManager = AuthenticationManager;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.jwtRedisService = jwtRedisService;
-        this.s3Service = s3Service;
-    }
-
-    //유저프로필URL 가져오기
+    /**
+     * a.유저프로필URL 가져오기
+     * @param memberId
+     * @return 회원 프로필 이미지 url
+     */
     public String getMemberProfileUrl(String memberId) {
         Member check = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
@@ -61,15 +55,23 @@ public class MemberService {
         return check.getProfileImgPath();
     }
 
-    // ID 중복 확인
-    public Boolean checkDuplicationId(String id) {
+    /**
+     * a. ID 중복 확인
+     * @param id
+     * @return 이미 존재함 : true / 중복 : false
+     */
+    public Boolean isUsable(String id) {
         if (id == null || id.isEmpty()) {
             return false;
         }
         return memberRepository.findById(id).isEmpty();
     }
 
-    //로그인
+    /**
+     * 2. 로그인
+     * @param loginMember
+     * @return
+     */
     public TokenDto login(MemberFunctionRequest loginMember) {
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
@@ -106,7 +108,7 @@ public class MemberService {
     private List<Interest> setInterest(List<InterestForTag> interestId, Member member) {
         List<Interest> memberInterest = new ArrayList<>();
 
-        if (interestId != null && interestId.size() > 0) {
+        if (interestId != null && !interestId.isEmpty()) {
             for (InterestForTag interest : interestId) {
                 Tag tag = tagRepository.findById(interest.getTagId())
                         .orElseThrow(() -> new NoSuchElementException("존재하지 않는 관심사입니다."));
@@ -221,7 +223,7 @@ public class MemberService {
 
         List<InterestForTag> memberTag = new ArrayList<>();
 
-        if (member.getInterests() != null && member.getInterests().size() > 0) {
+        if (member.getInterests() != null && !member.getInterests().isEmpty()) {
             for (Interest interest : member.getInterests())
                 memberTag.add(InterestForTag.of(interest));
         }

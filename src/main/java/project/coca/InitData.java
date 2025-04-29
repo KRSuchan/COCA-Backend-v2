@@ -48,7 +48,7 @@ public class InitData {
         }
 
         private void initMember() {
-            String defaultImgPath = "https://cocaattachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
+            String defaultImgPath = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
             // tester0000, tester1111, ..., tester9999 10명 생성
             for (int i = 0; i <= 9; i++) {
                 StringBuilder builder = new StringBuilder();
