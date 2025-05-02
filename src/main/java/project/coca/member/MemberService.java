@@ -40,8 +40,8 @@ public class MemberService {
     private final JwtRedisService jwtRedisService;
     private final String DEFAULT_PROFILE_IMAGE_PATH = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
     private final S3Service s3Service;
-    private AuthenticationManager authenticationManager;
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * a.유저프로필URL 가져오기
