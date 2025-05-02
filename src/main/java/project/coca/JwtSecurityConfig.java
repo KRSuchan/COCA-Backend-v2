@@ -1,4 +1,4 @@
-package project.coca.auth.config;
+package project.coca;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
