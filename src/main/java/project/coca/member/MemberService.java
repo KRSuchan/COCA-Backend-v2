@@ -1,12 +1,14 @@
 package project.coca.member;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +35,7 @@ import java.util.NoSuchElementException;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class MemberService {
     private final MemberRepository memberRepository;
     private final TagRepository tagRepository;
@@ -42,6 +45,7 @@ public class MemberService {
     private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * a.유저프로필URL 가져오기
@@ -87,7 +91,6 @@ public class MemberService {
                 jwtTokenProvider.createAccessToken(authentication),
                 jwtTokenProvider.createRefreshToken(authentication.getName())
         );
-
         return tokenDto;
     }
 
@@ -124,7 +127,7 @@ public class MemberService {
         if (memberRepository.existsById(joinMember.getId()))
             throw new DuplicateKeyException("동일한 아이디의 회원이 이미 존재합니다.");
 
-        Member member = new Member(joinMember.getId(), joinMember.getPassword(),
+        Member member = new Member(joinMember.getId(), passwordEncoder.encode(joinMember.getPassword()),
                 joinMember.getUserName());
 
         //관심사 선택했다면 관심사도 등록 (등록 전에 관심사 있는지 검사)

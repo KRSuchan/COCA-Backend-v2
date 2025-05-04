@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,13 +31,13 @@ public class JwtTokenProvider {
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtRedisService jwtRedisService;
     private final Key key;
-    private final UserDetailsService userDetailsService;
+    private final @Lazy UserDetailsService userDetailsService;
 
     @Autowired
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             RedisTemplate<String, String> redisTemplate,
                             JwtRedisService jwtRedisService,
-                            UserDetailsService userDetailsService) {
+                            @Lazy UserDetailsService userDetailsService) {
         this.redisTemplate = redisTemplate;
         this.jwtRedisService = jwtRedisService;
         this.userDetailsService = userDetailsService;

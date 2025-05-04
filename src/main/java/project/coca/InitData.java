@@ -44,7 +44,7 @@ public class InitData {
 
         public void init() throws IOException {
             initTag();
-            initMember();
+//            initMember();
         }
 
         private void initMember() {
