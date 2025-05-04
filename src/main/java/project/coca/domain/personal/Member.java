@@ -25,12 +25,14 @@ public class Member {
     @Column(name = "MEMBER_ID", length = 16)
     private String id;
 
-    @Column(name = "PASSWORD", length = 16)
+    @Column(name = "PASSWORD")
     private String password;
     @Column(name = "USERNAME", length = 20)
     private String userName;
     @Column(name = "PROFILE_IMG_PATH")
     private String profileImgPath;
+
+    private String role = "USER";
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     private List<Interest> interests = new ArrayList<>();
