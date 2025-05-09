@@ -18,5 +18,5 @@ public class MemberJoinRequest {
     private String password;
     private String userName;
     private Boolean isDefaultImage;
-    private List<InterestForTag> interestId = new ArrayList<>();
+    private List<InterestForTag> interestId;
 }

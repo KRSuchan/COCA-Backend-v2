@@ -17,7 +17,7 @@ public class MemberResponse {
     private String password;
     private String userName;
     private String profileImgPath;
-    private List<InterestForTag> interest = new ArrayList<>();
+    private List<InterestForTag> interest;
 
     public static MemberResponse of(Member member) {
         return MemberResponse.builder()

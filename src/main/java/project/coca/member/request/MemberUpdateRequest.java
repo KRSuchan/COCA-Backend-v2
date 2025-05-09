@@ -18,5 +18,5 @@ public class MemberUpdateRequest {
     private String password;
     private String userName;
     private String profileImageUrl;
-    private List<InterestForTag> interestId = new ArrayList<>();
+    private List<InterestForTag> interestId;
 }
