@@ -1,5 +1,6 @@
 package project.coca.member.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import project.coca.domain.tag.Interest;
 @Builder
 @Getter
 @Setter
+@AllArgsConstructor
 public class InterestForTag {
     private Long tagId;
     private String tagName;

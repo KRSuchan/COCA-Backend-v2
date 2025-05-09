@@ -32,4 +32,10 @@ public class Tag {
         this.field = field;
         this.name = name;
     }
+    @Builder
+    public Tag(Long id, String field, String name) {
+        this.id = id;
+        this.field = field;
+        this.name = name;
+    }
 }
