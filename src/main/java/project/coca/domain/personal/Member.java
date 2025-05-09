@@ -1,10 +1,7 @@
 package project.coca.domain.personal;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import project.coca.domain.group.CoGroup;
 import project.coca.domain.group.GroupManager;
 import project.coca.domain.group.GroupMember;
@@ -86,5 +83,13 @@ public class Member {
         this.id = id;
         this.password = password;
         this.userName = userName;
+    }
+    @Builder
+    public Member(String id, String password, String userName, String profileImgPath, List<Interest> interests) {
+        this.id = id;
+        this.password = password;
+        this.userName = userName;
+        this.profileImgPath = profileImgPath;
+        this.interests = interests;
     }
 }

@@ -12,13 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.aop.ExeTimer;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Interest;
 import project.coca.domain.tag.Tag;
 import project.coca.auth.jwt.JwtRedisService;
 import project.coca.auth.jwt.JwtTokenProvider;
 import project.coca.auth.jwt.TokenDto;
-import project.coca.member.request.MemberFunctionRequest;
+import project.coca.member.request.MemberLoginRequest;
 import project.coca.member.request.MemberJoinRequest;
 import project.coca.member.request.MemberUpdateRequest;
 import project.coca.member.response.InterestForTag;
@@ -26,7 +27,6 @@ import project.coca.schedule.S3Service;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -62,7 +62,7 @@ public class MemberService {
     /**
      * a. ID 중복 확인
      * @param id
-     * @return 이미 존재함 : true / 중복 : false
+     * @return 사용 가능(유니크) : true / 사용 불가(중복) : false
      */
     public Boolean isUsable(String id) {
         if (id == null || id.isEmpty()) {
@@ -76,7 +76,8 @@ public class MemberService {
      * @param loginMember
      * @return
      */
-    public TokenDto login(MemberFunctionRequest loginMember) {
+    @ExeTimer
+    public TokenDto login(MemberLoginRequest loginMember) {
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -94,7 +95,7 @@ public class MemberService {
         return tokenDto;
     }
 
-    public Boolean memberCheck(MemberFunctionRequest loginMember) {
+    public Boolean memberCheck(MemberLoginRequest loginMember) {
         Member check = memberRepository.findById(loginMember.getId())
                 .orElseThrow(() -> new NoSuchElementException("아이디 혹은 비밀번호가 일치하지 않습니다."));
 
@@ -108,7 +109,7 @@ public class MemberService {
     }
 
     //관심사 세팅~
-    private List<Interest> setInterest(List<InterestForTag> interestId, Member member) {
+    public List<Interest> setInterest(List<InterestForTag> interestId, Member member) {
         List<Interest> memberInterest = new ArrayList<>();
 
         if (interestId != null && !interestId.isEmpty()) {
@@ -123,6 +124,7 @@ public class MemberService {
     }
 
     //회원가입
+    @ExeTimer
     public Member memberJoin(MemberJoinRequest joinMember, MultipartFile profileImage) throws IOException {
         if (memberRepository.existsById(joinMember.getId()))
             throw new DuplicateKeyException("동일한 아이디의 회원이 이미 존재합니다.");
@@ -144,10 +146,9 @@ public class MemberService {
         if (joinMember.getIsDefaultImage()) {
             member.setProfileImgPath(DEFAULT_PROFILE_IMAGE_PATH);
         } else {
-            URL savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
-            member.setProfileImgPath(savedUrl.toString());
+            String savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
+            member.setProfileImgPath(savedUrl);
         }
-
         Member join = memberRepository.save(member);
         memberRepository.flush();
 
@@ -156,7 +157,7 @@ public class MemberService {
 
 
     //회원탈퇴
-    public boolean withdrawal(MemberFunctionRequest withdrawalMember) throws AuthenticationException {
+    public boolean withdrawal(MemberLoginRequest withdrawalMember) throws AuthenticationException {
         Member check = memberRepository.findById(withdrawalMember.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
@@ -172,7 +173,7 @@ public class MemberService {
     }
 
     //개인정보조회
-    public Member memberInfoInquiry(MemberFunctionRequest member) throws AuthenticationException {
+    public Member memberInfoInquiry(MemberLoginRequest member) throws AuthenticationException {
         Member inquiryMember = memberRepository.findById(member.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
@@ -210,8 +211,8 @@ public class MemberService {
             member.setProfileImgPath(DEFAULT_PROFILE_IMAGE_PATH);
         } else if (!newInfo.getProfileImageUrl().equals(member.getProfileImgPath())) {
             // 본인의 이전 url과 다른 url일 경우
-            URL savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
-            member.setProfileImgPath(savedUrl.toString());
+            String savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
+            member.setProfileImgPath(savedUrl);
         }   // url이 같으면 그냥 pass
 
         Member check = memberRepository.save(member);

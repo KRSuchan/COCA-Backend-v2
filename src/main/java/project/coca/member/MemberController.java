@@ -3,12 +3,11 @@ package project.coca.member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.auth.jwt.TokenDto;
-import project.coca.member.request.MemberFunctionRequest;
+import project.coca.member.request.MemberLoginRequest;
 import project.coca.member.request.MemberJoinRequest;
 import project.coca.member.request.MemberUpdateRequest;
 import project.coca.member.response.InterestForTag;
@@ -73,7 +72,7 @@ public class MemberController {
      * 로그인
      */
     @PostMapping("/loginReq")
-    public ApiResponse<TokenDto> LoginReq(@RequestBody MemberFunctionRequest loginMember) {
+    public ApiResponse<TokenDto> LoginReq(@RequestBody MemberLoginRequest loginMember) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember));
         } catch (NoSuchElementException e) {
@@ -93,7 +92,7 @@ public class MemberController {
     }
 
     @PostMapping("/checkPassword")
-    public ApiResponse<Boolean> memberCheckReq(@RequestBody MemberFunctionRequest loginMember) {
+    public ApiResponse<Boolean> memberCheckReq(@RequestBody MemberLoginRequest loginMember) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.memberCheck(loginMember));
         } catch (NoSuchElementException e) {
@@ -119,7 +118,7 @@ public class MemberController {
      * @body withdrawalMember 회원탈퇴 할 회원의 정보
      */
     @PostMapping("/withdrawalReq")
-    public ApiResponse<Boolean> WithdrawalReq(@RequestBody MemberFunctionRequest withdrawalMember) {
+    public ApiResponse<Boolean> WithdrawalReq(@RequestBody MemberLoginRequest withdrawalMember) {
         try {
             //true면 정상 삭제, false면 무언가에 의해 삭제 안됨
             return ApiResponse.response(ResponseCode.OK, memberService.withdrawal(withdrawalMember));
@@ -140,7 +139,7 @@ public class MemberController {
      * @body inquiryMember 개인정보를 조회 할 회원의 정보
      */
     @PostMapping("/memberInfoInquiryReq")
-    public ApiResponse<MemberResponse> MemberInfoInquiryReq(@RequestBody MemberFunctionRequest inquiryMember) {
+    public ApiResponse<MemberResponse> MemberInfoInquiryReq(@RequestBody MemberLoginRequest inquiryMember) {
         try {
             MemberResponse inquiryResult = MemberResponse.of(memberService.memberInfoInquiry(inquiryMember));
 

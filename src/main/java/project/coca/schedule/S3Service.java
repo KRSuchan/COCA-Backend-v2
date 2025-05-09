@@ -36,14 +36,14 @@ public class S3Service {
     }
 
     @Transactional
-    public URL uploadProfileImage(MultipartFile multipartFile, String memberId) throws IOException {
+    public String uploadProfileImage(MultipartFile multipartFile, String memberId) throws IOException {
         if (!MediaType.IMAGE_PNG.toString().equals(multipartFile.getContentType()) &&
                 !MediaType.IMAGE_JPEG.toString().equals(multipartFile.getContentType())) {
             System.out.println("png, jpeg 파일만 업로드 가능합니다");
             throw new IllegalArgumentException("png, jpeg 파일만 업로드 가능합니다");
         }
 
-        return uploadFile(multipartFile, profileFolderPath + memberId);
+        return uploadFile(multipartFile, profileFolderPath + memberId).toString();
     }
 
     /**
