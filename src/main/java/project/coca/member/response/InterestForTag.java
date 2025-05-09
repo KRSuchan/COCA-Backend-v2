@@ -10,12 +10,12 @@ import project.coca.domain.tag.Interest;
 @Setter
 public class InterestForTag {
     private Long tagId;
-    private String TagName;
+    private String tagName;
 
     public static InterestForTag of(Interest interest) {
         return InterestForTag.builder()
                 .tagId(interest.getTag().getId())
-                .TagName(interest.getTag().getName())
+                .tagName(interest.getTag().getName())
                 .build();
     }
 }

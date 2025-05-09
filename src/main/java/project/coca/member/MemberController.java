@@ -60,7 +60,6 @@ public class MemberController {
                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         try {
             MemberResponse joinResult = MemberResponse.of(memberService.memberJoin(joinMember, profileImage));
-            log.info(joinMember.getPassword());
             return ApiResponse.response(ResponseCode.OK, joinResult);
         } catch (DuplicateKeyException e) {
             // RequestParam 데이터와 동일한 아이디의 회원이 있을 경우
