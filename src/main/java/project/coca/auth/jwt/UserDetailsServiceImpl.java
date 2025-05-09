@@ -8,8 +8,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import project.coca.domain.personal.Member;
 import project.coca.member.MemberRepository;
@@ -34,6 +32,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserDetails createUserDetails(Member member) {
         List<GrantedAuthority> authorities =
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.getRole()));
-        return new User(member.getId(), member.getPassword(), authorities);
+        return new User(member.getId(),member.getPassword(), authorities);
     }
 }

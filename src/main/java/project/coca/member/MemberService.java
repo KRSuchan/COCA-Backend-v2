@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.aop.ExeTimer;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Interest;
 import project.coca.domain.tag.Tag;
@@ -76,7 +75,6 @@ public class MemberService {
      * @param loginMember
      * @return
      */
-    @ExeTimer
     public TokenDto login(MemberLoginRequest loginMember) {
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
@@ -124,7 +122,6 @@ public class MemberService {
     }
 
     //회원가입
-    @ExeTimer
     public Member memberJoin(MemberJoinRequest joinMember, MultipartFile profileImage) throws IOException {
         if (memberRepository.existsById(joinMember.getId()))
             throw new DuplicateKeyException("동일한 아이디의 회원이 이미 존재합니다.");
