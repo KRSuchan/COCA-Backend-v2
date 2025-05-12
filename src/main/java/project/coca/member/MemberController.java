@@ -28,7 +28,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/memberProfileImageUrlReq")
-    public ApiResponse<String> MemberProfileImageUrlReq(@RequestParam String memberId) {
+    public ApiResponse<String> getProfileImageUrl(@RequestParam String memberId) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.getMemberProfileUrl(memberId));
         } catch (NoSuchElementException e) {
@@ -43,7 +43,7 @@ public class MemberController {
      * id만 필요
      */
     @PostMapping("/validate-id")
-    public ApiResponse<Boolean> checkDuplicationId(@RequestBody MemberUpdateRequest memberRequest) {
+    public ApiResponse<Boolean> checkUsableId(@RequestBody MemberUpdateRequest memberRequest) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.isUsable(memberRequest.getId()));
         } catch (Exception e) {
@@ -55,7 +55,7 @@ public class MemberController {
      * 회원가입
      */
     @PostMapping(value = "/joinReq", consumes = {"multipart/form-data"})
-    public ApiResponse<MemberResponse> JoinReq(@RequestPart("data") MemberJoinRequest joinMember,
+    public ApiResponse<MemberResponse> join(@RequestPart("data") MemberJoinRequest joinMember,
                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         try {
             MemberResponse joinResult = MemberResponse.of(memberService.memberJoin(joinMember, profileImage));
@@ -72,7 +72,7 @@ public class MemberController {
      * 로그인
      */
     @PostMapping("/loginReq")
-    public ApiResponse<TokenDto> LoginReq(@RequestBody MemberLoginRequest loginMember) {
+    public ApiResponse<TokenDto> login(@RequestBody MemberLoginRequest loginMember) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember));
         } catch (NoSuchElementException e) {
@@ -92,7 +92,7 @@ public class MemberController {
     }
 
     @PostMapping("/checkPassword")
-    public ApiResponse<Boolean> memberCheckReq(@RequestBody MemberLoginRequest loginMember) {
+    public ApiResponse<Boolean> checkAccount(@RequestBody MemberLoginRequest loginMember) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.memberCheck(loginMember));
         } catch (NoSuchElementException e) {
@@ -106,7 +106,7 @@ public class MemberController {
      * 로그아웃
      */
     @PostMapping("/logoutReq")
-    public ApiResponse<Boolean> logoutReq() {
+    public ApiResponse<Boolean> logout() {
         return ApiResponse.response(ResponseCode.OK, memberService.logout());
     }
 
@@ -118,7 +118,7 @@ public class MemberController {
      * @body withdrawalMember 회원탈퇴 할 회원의 정보
      */
     @PostMapping("/withdrawalReq")
-    public ApiResponse<Boolean> WithdrawalReq(@RequestBody MemberLoginRequest withdrawalMember) {
+    public ApiResponse<Boolean> closeAccount(@RequestBody MemberLoginRequest withdrawalMember) {
         try {
             //true면 정상 삭제, false면 무언가에 의해 삭제 안됨
             return ApiResponse.response(ResponseCode.OK, memberService.withdrawal(withdrawalMember));
@@ -139,7 +139,7 @@ public class MemberController {
      * @body inquiryMember 개인정보를 조회 할 회원의 정보
      */
     @PostMapping("/memberInfoInquiryReq")
-    public ApiResponse<MemberResponse> MemberInfoInquiryReq(@RequestBody MemberLoginRequest inquiryMember) {
+    public ApiResponse<MemberResponse> getAccountInfo(@RequestBody MemberLoginRequest inquiryMember) {
         try {
             MemberResponse inquiryResult = MemberResponse.of(memberService.memberInfoInquiry(inquiryMember));
 
@@ -160,7 +160,7 @@ public class MemberController {
      * @body newInfo 수정 할 회원의 새 정보
      */
     @PostMapping(value = "/memberInfoUpdateReq", consumes = {"multipart/form-data"})
-    public ApiResponse<MemberResponse> MemberInfoUpdateReq(@RequestPart("data") MemberUpdateRequest newInfo,
+    public ApiResponse<MemberResponse> updateAccountInfo(@RequestPart("data") MemberUpdateRequest newInfo,
                                                            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         System.out.println("isNull = " + (profileImage == null));
 
@@ -178,7 +178,7 @@ public class MemberController {
     }
 
     @GetMapping("/memberTagInquiryReq")
-    public ApiResponse<List<InterestForTag>> MemberTagInquiryReq(@RequestParam String memberId) {
+    public ApiResponse<List<InterestForTag>> getMemberTagInfo(@RequestParam String memberId) {
         try {
             List<InterestForTag> result = memberService.memberTagInquiry(memberId);
 
