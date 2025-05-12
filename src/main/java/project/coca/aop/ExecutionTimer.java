@@ -21,12 +21,12 @@ public class ExecutionTimer {
 
     // 메서드 실행 전,후로 시간을 공유해야 하기 때문
     @Around("timer()")
-    public void AssumeExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object AssumeExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
         StopWatch stopWatch = new StopWatch();
 
         stopWatch.start();
-        joinPoint.proceed(); // 조인포인트의 메서드 실행
+        Object result = joinPoint.proceed();// 조인포인트의 메서드 실행
         stopWatch.stop();
 
         long totalTimeMillis = stopWatch.getTotalTimeMillis();
@@ -35,5 +35,7 @@ public class ExecutionTimer {
         String methodName = signature.getMethod().getName();
 
         log.info("실행 메서드: {}, 실행시간 = {}ms", methodName, totalTimeMillis);
+
+        return result;
     }
 }
