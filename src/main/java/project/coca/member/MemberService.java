@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +27,6 @@ import project.coca.member.request.MemberUpdateRequest;
 import project.coca.member.response.InterestForTag;
 import project.coca.schedule.S3Service;
 
-import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,11 +49,11 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * a.유저프로필URL 가져오기
+     * 유저프로필URL 가져오기
      * @param memberId
      * @return 회원 프로필 이미지 url
      */
-    public String getMemberProfileUrl(String memberId) {
+    public String readProfileUrl(String memberId) {
         Member check = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
@@ -60,7 +61,7 @@ public class MemberService {
     }
 
     /**
-     * a. ID 중복 확인
+     * ID 중복 확인
      * @param id
      * @return 사용 가능(유니크) : true / 사용 불가(중복) : false
      */
@@ -72,22 +73,14 @@ public class MemberService {
     }
 
     /**
-     * 2. 로그인
+     * 로그인
      * @param loginMember
-     * @return
+     * @return TokenDto
      */
     @ExeTimer
     public TokenDto login(MemberLoginRequest loginMember) {
-        // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
-        // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginMember.getId(), loginMember.getPassword());
-
-        // 2. 실제 검증 (사용자 비밀번호 체크)이 이루어지는 부분
-        // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
+        Authentication authentication  = getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+        // 인증 정보를 기반으로 JWT 토큰 생성
         TokenDto tokenDto = new TokenDto(
                 jwtTokenProvider.createAccessToken(authentication),
                 jwtTokenProvider.createRefreshToken(authentication.getName())
@@ -95,11 +88,36 @@ public class MemberService {
         return tokenDto;
     }
 
-    public Boolean memberCheck(MemberLoginRequest loginMember) {
-        Member check = memberRepository.findById(loginMember.getId())
-                .orElseThrow(() -> new NoSuchElementException("아이디 혹은 비밀번호가 일치하지 않습니다."));
+    /**
+     * 개인정보조회 전 비밀번호 확인
+     * @param loginMember
+     * @return 정상 입력 시 true, 비밀번호 오류 시 false
+     * @throws AuthenticationException if authentication fails
+     */
+    public Boolean checkMember(MemberLoginRequest loginMember){
+        try {
+            getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+            return true;
+        } catch (BadCredentialsException e) {// 비밀번호 틀림
+            return false;
+        }
+    }
 
-        return loginMember.getPassword().equals(check.getPassword());
+    /**
+     * 회원 정보 인증
+     * @param memberId
+     * @param memberPassword
+     * @return Authentication
+     */
+    public Authentication getMemberAuthentication(String memberId, String memberPassword) {
+        // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(memberId, memberPassword);
+
+        // 2. 실제 검증이 이루어지는 부분 (AuthenticationToken 이용)
+        // authenticate 매서드가 실행될 때 UserDetailsServiceImpl.loadUserByUsername() 메서드가 실행
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        return authentication;
     }
 
     public Boolean logout() {
@@ -108,7 +126,12 @@ public class MemberService {
         return true;
     }
 
-    //관심사 세팅~
+    /**
+     * 관심사 정보 설정
+     * @param interestId
+     * @param member
+     * @return List
+     */
     public List<Interest> setInterest(List<InterestForTag> interestId, Member member) {
         List<Interest> memberInterest = new ArrayList<>();
 
@@ -123,8 +146,14 @@ public class MemberService {
         return memberInterest;
     }
 
-    //회원가입
-    public Member memberJoin(MemberJoinRequest joinMember, MultipartFile profileImage) throws IOException {
+    /**
+     * 회원가입
+      * @param joinMember
+     * @param profileImage
+     * @return
+     * @throws IOException
+     */
+    public Member joinMember(MemberJoinRequest joinMember, MultipartFile profileImage) throws IOException {
         if (memberRepository.existsById(joinMember.getId()))
             throw new DuplicateKeyException("동일한 아이디의 회원이 이미 존재합니다.");
 
@@ -149,62 +178,71 @@ public class MemberService {
             member.setProfileImgPath(savedUrl);
         }
         Member join = memberRepository.save(member);
-        memberRepository.flush();
 
         return join;
     }
 
 
-    //회원탈퇴
-    public boolean withdrawal(MemberLoginRequest withdrawalMember) throws AuthenticationException {
+    /**
+     * 회원 탈퇴
+     * @param withdrawalMember
+     * @return 삭제 성공하면 true 실패하면 false
+     * @throws AuthenticationException
+     */
+    public boolean closeAccount(MemberLoginRequest withdrawalMember) throws AuthenticationException {
         Member check = memberRepository.findById(withdrawalMember.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
-        if (withdrawalMember.getPassword().equals(check.getPassword())) {
-            memberRepository.delete(check);
-            memberRepository.flush();
+        getMemberAuthentication(withdrawalMember.getId(), withdrawalMember.getPassword());
 
-            //existsById -> 존재하면 true 반환, 존재하지 않으면 false 반환
-            //존재하지 않으면 성공이니까 !existsById return.
-            return !memberRepository.existsById(withdrawalMember.getId());
-        } else
-            throw new AuthenticationException("비밀번호가 일치하지 않습니다.");
+        memberRepository.delete(check);
+        return !memberRepository.existsById(withdrawalMember.getId());
     }
 
-    //개인정보조회
-    public Member memberInfoInquiry(MemberLoginRequest member) throws AuthenticationException {
+    /**
+     * 회원정보조회
+     * @param member
+     * @return
+     * @throws AuthenticationException
+     */
+    public Member getMemberInfo(MemberLoginRequest member) throws AuthenticationException {
         Member inquiryMember = memberRepository.findById(member.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
-
-        if (member.getPassword().equals(inquiryMember.getPassword()))
-            return inquiryMember;
-        else
-            throw new AuthenticationException("비밀번호가 일치하지 않습니다.");
+        return inquiryMember;
     }
 
-    //개인정보수정 -> 개인정보조회가 선행이라 pw 확인x
-    public Member memberInfoUpdate(MemberUpdateRequest newInfo, MultipartFile profileImage) throws IOException {
+    /**
+     * 회원정보수정
+     * @param newInfo
+     * @param profileImage
+     * @return Member
+     * @throws IOException
+     */
+    public Member updateMemberInfo(MemberUpdateRequest newInfo, MultipartFile profileImage) throws IOException {
+        // 회원 정보 조회
         Member member = memberRepository.findById(newInfo.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
+        // password 설정
         if (!newInfo.getPassword().isEmpty() && !newInfo.getPassword().isBlank()) {
-            member.setPassword(newInfo.getPassword());
+            member.setPassword(passwordEncoder.encode(newInfo.getPassword()));
         }
+        // 회원 닉네임 설정
         member.setUserName(newInfo.getUserName());
 
-        //새 관심사 넣기 전 기존 관심사 삭제
-        if (member.getInterests() != null && member.getInterests().size() > 0)
+        // 회원 관심사 기존 정보 삭제
+        if (member.getInterests() != null && !member.getInterests().isEmpty())
             for (Interest interest : member.getInterests())
                 interestRepository.delete(interest);
-
+        // 새 관심사 설정
         List<Interest> memberInterest;
         try {
             memberInterest = setInterest(newInfo.getInterestId(), member);
         } catch (NoSuchElementException e) {
             throw new NoSuchElementException("존재하지 않는 관심사입니다.");
         }
-        //새 관심사 세팅
         member.setInterests(memberInterest);
-        // 프로필 이미지 업로드
+
+        // 프로필 이미지 설정
         if (newInfo.getProfileImageUrl().equals(DEFAULT_PROFILE_IMAGE_PATH)) {
             // url이 디폴트 이미지 url과 동일하면 디폴트 이미지
             member.setProfileImgPath(DEFAULT_PROFILE_IMAGE_PATH);
@@ -214,13 +252,18 @@ public class MemberService {
             member.setProfileImgPath(savedUrl);
         }   // url이 같으면 그냥 pass
 
+        // 최종 save
         Member check = memberRepository.save(member);
-        memberRepository.flush();
 
         return check;
     }
 
-    public List<InterestForTag> memberTagInquiry(String memberId) {
+    /**
+     * 회원 관심태그 조회
+     * @param memberId
+     * @return List<InterestForTag>
+     */
+    public List<InterestForTag> getMemberTags(String memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 

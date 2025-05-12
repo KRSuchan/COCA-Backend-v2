@@ -35,7 +35,7 @@ public class GroupController {
      *
      * @param request : Member(id면 충분), CoGroup(id, 경우에 따라 pwd)
      */
-    @PostMapping("/join")
+    @PostMapping("/joinMember")
     public ApiResponse<?> joinGroup(@RequestBody GroupRequest request) {
         Member member = request.getMember();
         CoGroup group = request.getGroup();

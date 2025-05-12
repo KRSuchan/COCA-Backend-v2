@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.auth.jwt.TokenDto;
@@ -16,7 +17,7 @@ import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
 
-import javax.naming.AuthenticationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -27,10 +28,13 @@ import java.util.NoSuchElementException;
 public class MemberController {
     private final MemberService memberService;
 
+    /**
+     * 회원 프로필 이미지 url 조회
+     */
     @GetMapping("/memberProfileImageUrlReq")
     public ApiResponse<String> getProfileImageUrl(@RequestParam String memberId) {
         try {
-            return ApiResponse.response(ResponseCode.OK, memberService.getMemberProfileUrl(memberId));
+            return ApiResponse.response(ResponseCode.OK, memberService.readProfileUrl(memberId));
         } catch (NoSuchElementException e) {
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어있습니다.");
         } catch (Exception e) {
@@ -40,7 +44,6 @@ public class MemberController {
 
     /**
      * 아이디 중복 체크
-     * id만 필요
      */
     @PostMapping("/validate-id")
     public ApiResponse<Boolean> checkUsableId(@RequestBody MemberUpdateRequest memberRequest) {
@@ -58,7 +61,7 @@ public class MemberController {
     public ApiResponse<MemberResponse> join(@RequestPart("data") MemberJoinRequest joinMember,
                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         try {
-            MemberResponse joinResult = MemberResponse.of(memberService.memberJoin(joinMember, profileImage));
+            MemberResponse joinResult = MemberResponse.of(memberService.joinMember(joinMember, profileImage));
             return ApiResponse.response(ResponseCode.OK, joinResult);
         } catch (DuplicateKeyException e) {
             // RequestParam 데이터와 동일한 아이디의 회원이 있을 경우
@@ -91,12 +94,13 @@ public class MemberController {
         }
     }
 
+    /**
+     * 개인정보조회 전 비밀번호 확인
+     */
     @PostMapping("/checkPassword")
     public ApiResponse<Boolean> checkAccount(@RequestBody MemberLoginRequest loginMember) {
         try {
-            return ApiResponse.response(ResponseCode.OK, memberService.memberCheck(loginMember));
-        } catch (NoSuchElementException e) {
-            return ApiResponse.fail(ErrorCode.BAD_REQUEST, "비밀번호 불일치");
+            return ApiResponse.response(ResponseCode.OK, memberService.checkMember(loginMember));
         } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -113,15 +117,12 @@ public class MemberController {
 
     /**
      * 회원탈퇴
-     *
-     * @return ApiResponse
-     * @body withdrawalMember 회원탈퇴 할 회원의 정보
      */
     @PostMapping("/withdrawalReq")
     public ApiResponse<Boolean> closeAccount(@RequestBody MemberLoginRequest withdrawalMember) {
         try {
             //true면 정상 삭제, false면 무언가에 의해 삭제 안됨
-            return ApiResponse.response(ResponseCode.OK, memberService.withdrawal(withdrawalMember));
+            return ApiResponse.response(ResponseCode.OK, memberService.closeAccount(withdrawalMember));
         } catch (NoSuchElementException e) {
             // RequestParam 데이터에 조회되지 않는 데이터 있는 경우
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어 있습니다.");
@@ -134,14 +135,11 @@ public class MemberController {
 
     /**
      * 개인정보조회
-     *
-     * @return ApiResponse
-     * @body inquiryMember 개인정보를 조회 할 회원의 정보
      */
     @PostMapping("/memberInfoInquiryReq")
     public ApiResponse<MemberResponse> getAccountInfo(@RequestBody MemberLoginRequest inquiryMember) {
         try {
-            MemberResponse inquiryResult = MemberResponse.of(memberService.memberInfoInquiry(inquiryMember));
+            MemberResponse inquiryResult = MemberResponse.of(memberService.getMemberInfo(inquiryMember));
 
             return ApiResponse.response(ResponseCode.OK, inquiryResult);
         } catch (NoSuchElementException e) {
@@ -155,9 +153,6 @@ public class MemberController {
 
     /**
      * 개인정보수정
-     *
-     * @return ApiResponse
-     * @body newInfo 수정 할 회원의 새 정보
      */
     @PostMapping(value = "/memberInfoUpdateReq", consumes = {"multipart/form-data"})
     public ApiResponse<MemberResponse> updateAccountInfo(@RequestPart("data") MemberUpdateRequest newInfo,
@@ -165,10 +160,9 @@ public class MemberController {
         System.out.println("isNull = " + (profileImage == null));
 
         try {
-            MemberResponse updateResult = MemberResponse.of(memberService.memberInfoUpdate(newInfo, profileImage));
+            MemberResponse updateResult = MemberResponse.of(memberService.updateMemberInfo(newInfo, profileImage));
             return ApiResponse.response(ResponseCode.OK, updateResult);
         } catch (IllegalArgumentException | NullPointerException e) {
-            e.printStackTrace();
             return ApiResponse.fail(ErrorCode.BAD_REQUEST, e.getMessage());
         } catch (NoSuchElementException e) {
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어있습니다.");
@@ -177,11 +171,13 @@ public class MemberController {
         }
     }
 
+    /**
+     * 회원 관심 태그 조회
+     */
     @GetMapping("/memberTagInquiryReq")
     public ApiResponse<List<InterestForTag>> getMemberTagInfo(@RequestParam String memberId) {
         try {
-            List<InterestForTag> result = memberService.memberTagInquiry(memberId);
-
+            List<InterestForTag> result = memberService.getMemberTags(memberId);
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (NoSuchElementException e) {
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어있습니다.");

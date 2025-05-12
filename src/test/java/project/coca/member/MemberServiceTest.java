@@ -2,8 +2,6 @@ package project.coca.member;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +17,6 @@ import project.coca.member.request.MemberLoginRequest;
 import project.coca.member.response.InterestForTag;
 import project.coca.schedule.S3Service;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -73,7 +70,7 @@ class MemberServiceTest {
         when(memberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         //when
-        Member member = memberService.memberJoin(memberJoinRequest, null);
+        Member member = memberService.joinMember(memberJoinRequest, null);
 
         //then
         assertEquals(id, member.getId());

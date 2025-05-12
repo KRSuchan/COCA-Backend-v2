@@ -53,7 +53,7 @@ class MemberServiceIntegrationTest {
         );
 
         //when
-        memberService.memberJoin(memberJoinRequest, null);
+        memberService.joinMember(memberJoinRequest, null);
 
         //then
         Member result = memberRepository.findById(member.getId()).get();
