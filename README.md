@@ -1,8 +1,8 @@
 
-# 📅 COCA Backend
+# 📅 COCA-v2 Backend
 
-이 프로젝트는 **COCA** 서비스의 백엔드입니다. 
-**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.
+이 프로젝트는 **COCA-v2** 서비스의 백엔드입니다. 
+**COCA-v2** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.
 ### 프로젝트 개요
 COCA 프로젝트는 사용자 간 일정 공유와 협업을 지원하는 서비스로, 개인 일정뿐 아니라 그룹 단위의 일정 조율까지 한 번에 관리할 수 있는 플랫폼입니다.
 Spring Security와 JWT를 기반으로 한 안정적인 인증 시스템을 통해 세션을 관리하며, 사용자 간의 효율적인 소통과 협업을 가능하게 합니다.
