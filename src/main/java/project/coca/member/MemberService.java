@@ -2,6 +2,7 @@ package project.coca.member;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,14 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.aop.ExeTimer;
-import project.coca.domain.personal.Member;
-import project.coca.domain.tag.Interest;
-import project.coca.domain.tag.Tag;
 import project.coca.auth.jwt.JwtRedisService;
 import project.coca.auth.jwt.JwtTokenProvider;
 import project.coca.auth.jwt.TokenDto;
-import project.coca.member.request.MemberLoginRequest;
+import project.coca.domain.personal.Member;
+import project.coca.domain.tag.Interest;
+import project.coca.domain.tag.Tag;
 import project.coca.member.request.MemberJoinRequest;
+import project.coca.member.request.MemberLoginRequest;
 import project.coca.member.request.MemberUpdateRequest;
 import project.coca.member.response.InterestForTag;
 import project.coca.schedule.S3Service;
@@ -42,14 +43,17 @@ public class MemberService {
     private final TagRepository tagRepository;
     private final InterestRepository interestRepository;
     private final JwtRedisService jwtRedisService;
-    private final String DEFAULT_PROFILE_IMAGE_PATH = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
     private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final String DEFAULT_PROFILE_IMAGE_PATH = "DEFAULT_PROFILE_IMG.jpg";
+    @Value("${spring.cloud.aws.s3.url}")
+    private String s3Url;
 
     /**
      * 유저프로필URL 가져오기
+     *
      * @param memberId
      * @return 회원 프로필 이미지 url
      */
@@ -62,6 +66,7 @@ public class MemberService {
 
     /**
      * ID 중복 확인
+     *
      * @param id
      * @return 사용 가능(유니크) : true / 사용 불가(중복) : false
      */
@@ -74,12 +79,13 @@ public class MemberService {
 
     /**
      * 로그인
+     *
      * @param loginMember
      * @return TokenDto
      */
     @ExeTimer
     public TokenDto login(MemberLoginRequest loginMember) {
-        Authentication authentication  = getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+        Authentication authentication = getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
         // 인증 정보를 기반으로 JWT 토큰 생성
         TokenDto tokenDto = new TokenDto(
                 jwtTokenProvider.createAccessToken(authentication),
@@ -90,11 +96,12 @@ public class MemberService {
 
     /**
      * 개인정보조회 전 비밀번호 확인
+     *
      * @param loginMember
      * @return 정상 입력 시 true, 비밀번호 오류 시 false
      * @throws AuthenticationException if authentication fails
      */
-    public Boolean checkMember(MemberLoginRequest loginMember){
+    public Boolean checkMember(MemberLoginRequest loginMember) {
         try {
             getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
             return true;
@@ -105,6 +112,7 @@ public class MemberService {
 
     /**
      * 회원 정보 인증
+     *
      * @param memberId
      * @param memberPassword
      * @return Authentication
@@ -128,6 +136,7 @@ public class MemberService {
 
     /**
      * 관심사 정보 설정
+     *
      * @param interestId
      * @param member
      * @return List
@@ -148,7 +157,8 @@ public class MemberService {
 
     /**
      * 회원가입
-      * @param joinMember
+     *
+     * @param joinMember
      * @param profileImage
      * @return
      * @throws IOException
@@ -172,7 +182,7 @@ public class MemberService {
 
         // 프로필 이미지 업로드
         if (joinMember.getIsDefaultImage()) {
-            member.setProfileImgPath(DEFAULT_PROFILE_IMAGE_PATH);
+            member.setProfileImgPath(s3Url + DEFAULT_PROFILE_IMAGE_PATH);
         } else {
             String savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
             member.setProfileImgPath(savedUrl);
@@ -185,6 +195,7 @@ public class MemberService {
 
     /**
      * 회원 탈퇴
+     *
      * @param withdrawalMember
      * @return 삭제 성공하면 true 실패하면 false
      * @throws AuthenticationException
@@ -201,6 +212,7 @@ public class MemberService {
 
     /**
      * 회원정보조회
+     *
      * @param member
      * @return
      * @throws AuthenticationException
@@ -213,6 +225,7 @@ public class MemberService {
 
     /**
      * 회원정보수정
+     *
      * @param newInfo
      * @param profileImage
      * @return Member
@@ -243,9 +256,9 @@ public class MemberService {
         member.setInterests(memberInterest);
 
         // 프로필 이미지 설정
-        if (newInfo.getProfileImageUrl().equals(DEFAULT_PROFILE_IMAGE_PATH)) {
+        if (newInfo.getProfileImageUrl().equals(s3Url + DEFAULT_PROFILE_IMAGE_PATH)) {
             // url이 디폴트 이미지 url과 동일하면 디폴트 이미지
-            member.setProfileImgPath(DEFAULT_PROFILE_IMAGE_PATH);
+            member.setProfileImgPath(s3Url + DEFAULT_PROFILE_IMAGE_PATH);
         } else if (!newInfo.getProfileImageUrl().equals(member.getProfileImgPath())) {
             // 본인의 이전 url과 다른 url일 경우
             String savedUrl = s3Service.uploadProfileImage(profileImage, member.getId());
@@ -260,6 +273,7 @@ public class MemberService {
 
     /**
      * 회원 관심태그 조회
+     *
      * @param memberId
      * @return List<InterestForTag>
      */

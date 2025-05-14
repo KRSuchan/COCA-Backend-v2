@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,8 +42,8 @@ class MemberServiceTest {
     TagRepository tagRepository;
     @Mock
     S3Service s3Service;
-
-    static private final String DEFAULT_PROFILE_IMAGE_PATH = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
+    @Value("${spring.cloud.aws.s3.url}")
+    private String s3url;
 
     @Test
     public void 회원가입_정상() throws Exception {
@@ -51,9 +52,9 @@ class MemberServiceTest {
         String password = "testPassword";
         String username = "testerName";
         ArrayList<InterestForTag> interestForTags = new ArrayList<>();
-        interestForTags.add(new InterestForTag(1L,"스프링"));
-        interestForTags.add(new InterestForTag(2L,"자바"));
-        interestForTags.add(new InterestForTag(3L,"리액트"));
+        interestForTags.add(new InterestForTag(1L, "스프링"));
+        interestForTags.add(new InterestForTag(2L, "자바"));
+        interestForTags.add(new InterestForTag(3L, "리액트"));
 
         MemberJoinRequest memberJoinRequest = new MemberJoinRequest(
                 id,
@@ -74,9 +75,10 @@ class MemberServiceTest {
 
         //then
         assertEquals(id, member.getId());
-        assertEquals("encoded-password",member.getPassword());
+        assertEquals("encoded-password", member.getPassword());
         assertEquals(username, member.getUserName());
-        assertEquals(DEFAULT_PROFILE_IMAGE_PATH, member.getProfileImgPath());
+        String DEFAULT_PROFILE_IMAGE_PATH = "DEFAULT_PROFILE_IMG.jpg";
+        assertEquals(s3url + DEFAULT_PROFILE_IMAGE_PATH, member.getProfileImgPath());
         int i = 0;
         for (InterestForTag interestForTag : interestForTags) {
             assertEquals(interestForTag.getTagId(), member.getInterests().get(i).getTag().getId());
@@ -95,6 +97,7 @@ class MemberServiceTest {
         //then
         assertTrue(result);
     }
+
     @Test
     public void 회원가입_사용불가능한ID() throws Exception {
         //given
@@ -125,7 +128,7 @@ class MemberServiceTest {
         TokenDto tokenDto = memberService.login(request);
 
         //then
-        assertEquals("access-token",tokenDto.getAccessToken());
-        assertEquals("refresh-token",tokenDto.getRefreshToken());
+        assertEquals("access-token", tokenDto.getAccessToken());
+        assertEquals("refresh-token", tokenDto.getRefreshToken());
     }
 }

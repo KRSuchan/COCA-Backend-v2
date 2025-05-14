@@ -6,7 +6,7 @@ import project.coca.domain.group.CoGroup;
 import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.domain.request.*;
-import project.coca.common.error.AlreadyReportedException;
+import project.coca.common.exception.AlreadyReportedException;
 import project.coca.friend.FriendRepository;
 import project.coca.group.GroupManagerRepository;
 import project.coca.group.GroupMemberRepository;

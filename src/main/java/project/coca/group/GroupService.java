@@ -14,7 +14,7 @@ import project.coca.domain.group.GroupNotice;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.GroupTag;
 import project.coca.domain.tag.Tag;
-import project.coca.common.error.AlreadyReportedException;
+import project.coca.common.exception.AlreadyReportedException;
 import project.coca.group.response.GroupDetailSearchResponse;
 import project.coca.member.MemberRepository;
 import project.coca.member.TagRepository;

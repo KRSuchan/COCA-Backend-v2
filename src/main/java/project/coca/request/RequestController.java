@@ -8,7 +8,7 @@ import project.coca.domain.request.GroupRequest;
 import project.coca.domain.request.RequestStatus;
 import project.coca.domain.request.ScheduleRequest;
 import project.coca.common.ApiResponse;
-import project.coca.common.error.AlreadyReportedException;
+import project.coca.common.exception.AlreadyReportedException;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
 import project.coca.request.request.RequestUpdateRequest;

@@ -3,6 +3,7 @@ package project.coca;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -42,13 +43,16 @@ public class InitData {
         private List<CoGroup> coGroupList = new ArrayList<>();
         private List<Tag> tagList = new ArrayList<>();
 
+        @Value("${spring.cloud.aws.s3.url}")
+        private String s3url;
+
         public void init() throws IOException {
             initTag();
 //            initMember();
         }
 
         private void initMember() {
-            String defaultImgPath = "https://coca-attachments.s3.amazonaws.com/DEFAULT_PROFILE_IMG.jpg";
+            String defaultImgPath = s3url + "DEFAULT_PROFILE_IMG.jpg";
             // tester0000, tester1111, ..., tester9999 10명 생성
             for (int i = 0; i <= 9; i++) {
                 StringBuilder builder = new StringBuilder();

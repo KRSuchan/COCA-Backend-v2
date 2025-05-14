@@ -19,18 +19,31 @@ public class S3Service {
     private final String profileFolderPath = "profile-images/";
     private final String groupFolderPath = "groups/";
     private final String personalFolderPath = "personals/";
-    @Value("${spring.cloud.aws.s3.bucket}")
-    private String BUCKET;
+    private final String BUCKET;
+    private final String s3Url;
 
-    public S3Service(S3Operations s3Operations) {
+    public S3Service(
+            S3Operations s3Operations,
+            @Value("${spring.cloud.aws.s3.bucket}") String bucket,
+            @Value("${spring.cloud.aws.s3.url}") String s3Url
+    ) {
         this.s3Operations = s3Operations;
+        this.BUCKET = bucket;
+        this.s3Url = s3Url;
     }
 
     private URL uploadFile(MultipartFile file, String key) throws IOException {
         try (InputStream inputStream = file.getInputStream()) {
-            S3Resource s3Resource = s3Operations.upload(BUCKET, key, inputStream, ObjectMetadata.builder().contentType(file.getContentType()).build());
+            S3Resource s3Resource = s3Operations.upload(
+                    BUCKET,
+                    key,
+                    inputStream,
+                    ObjectMetadata.builder()
+                            .contentType(file.getContentType())
+                            .build()
+            );
             return s3Resource.getURL();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new IOException("IO EXCEPTION IN S3Service.uploadFile()");
         }
     }
@@ -47,10 +60,10 @@ public class S3Service {
     }
 
     /**
-     * @param multipartFile      : 원본 파일
-     * @param memberId           : 회원 계정
-     * @param personalScheduleId : 회원의 개인 일정 id
-     * @param divisionNum        : 분류 번호 ex) 파일 명 (1).png 형태로 저장, 0이면 없음
+     * @param multipartFile      원본 파일
+     * @param memberId           회원 계정
+     * @param personalScheduleId 회원의 개인 일정 id
+     * @param divisionNum        분류 번호 ex) 파일 명 (1).png 형태로 저장, 0이면 없음
      * @return AWS에 저장된 파일의 URL
      * @throws IOException
      */
@@ -85,7 +98,7 @@ public class S3Service {
      */
     @Transactional
     public void deleteS3File(String url) {
-        String key = url.replace("https://coca-attachments.s3.amazonaws.com/", "");
+        String key = url.replace(s3Url, "");
         System.out.println(key);
         s3Operations.deleteObject(BUCKET, key);
     }
