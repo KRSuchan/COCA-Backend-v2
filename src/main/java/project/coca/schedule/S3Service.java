@@ -44,6 +44,9 @@ public class S3Service {
             );
             return s3Resource.getURL();
         } catch (Exception e) {
+            System.err.println("🔴 Error in S3Service.uploadFile()");
+            System.err.println(BUCKET);
+            System.err.println(key);
             throw new IOException("IO EXCEPTION IN S3Service.uploadFile()");
         }
     }
