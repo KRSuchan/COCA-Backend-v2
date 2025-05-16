@@ -5,16 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.oxm.ValidationFailureException;
 import org.springframework.web.bind.annotation.*;
+import project.coca.common.ApiResponse;
+import project.coca.common.error.ErrorCode;
+import project.coca.common.exception.AlreadyReportedException;
+import project.coca.common.success.ResponseCode;
 import project.coca.domain.group.CoGroup;
 import project.coca.domain.group.GroupMember;
 import project.coca.domain.group.GroupNotice;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.GroupTag;
 import project.coca.domain.tag.Tag;
-import project.coca.common.ApiResponse;
-import project.coca.common.exception.AlreadyReportedException;
-import project.coca.common.error.ErrorCode;
-import project.coca.common.success.ResponseCode;
 import project.coca.group.request.GroupRequest;
 import project.coca.group.request.GroupUpdateRequest;
 import project.coca.group.response.*;
@@ -59,7 +59,7 @@ public class GroupController {
      * @param memberId : 회원 id
      * @param groupId  : 그룹 id
      */
-    @PostMapping("/leave/member/{memberId}/group/{groupId}")
+    @DeleteMapping("/leave/member/{memberId}/group/{groupId}")
     public ApiResponse<?> leaveGroup(@PathVariable String memberId,
                                      @PathVariable Long groupId) {
         log.info("leaveGroup : member {}", memberId);
