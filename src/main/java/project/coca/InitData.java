@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import project.coca.domain.group.CoGroup;
 import project.coca.domain.personal.Member;
@@ -39,6 +40,7 @@ public class InitData {
         private final TagRepository tagRepository;
         private final MemberRepository memberRepository;
         private final InterestRepository interestRepository;
+        private final PasswordEncoder passwordEncoder;
         private List<Member> memberList = new ArrayList<>();
         private List<CoGroup> coGroupList = new ArrayList<>();
         private List<Tag> tagList = new ArrayList<>();
@@ -48,7 +50,7 @@ public class InitData {
 
         public void init() throws IOException {
             initTag();
-//            initMember();
+            initMember();
         }
 
         private void initMember() {
@@ -57,7 +59,7 @@ public class InitData {
             for (int i = 0; i <= 9; i++) {
                 StringBuilder builder = new StringBuilder();
                 builder.append(String.valueOf(i).repeat(4));
-                initMember("tester" + builder, "tester" + builder, "테스터" + i, defaultImgPath, tagList.subList(0, 3));
+                initMember("tester" + builder, passwordEncoder.encode("tester" + builder), "테스터" + i, defaultImgPath, tagList.subList(0, 3));
             }
             memberList = memberRepository.findAll();
         }
@@ -69,7 +71,11 @@ public class InitData {
                 interests.add(new Interest(member, tag));
             }
             member.setInterests(interests);
-            memberRepository.save(member);
+            if (memberRepository.findById(id).isEmpty()) {
+                memberRepository.save(member);
+            } else {
+                log.info("이미 존재하는 회원 정보입니다. : " + member.getId());
+            }
         }
 
         private void initTag() {
@@ -96,7 +102,11 @@ public class InitData {
                     .field(field)
                     .name(name)
                     .build();
-            tagRepository.save(tag);
+            if (tagRepository.findByName(name).isEmpty()) {
+                tagRepository.save(tag);
+            } else {
+                log.info("이미 존재하는 태그 정보입니다. : " + tag.getId() + ", " + tag.getName());
+            }
         }
     }
 }
