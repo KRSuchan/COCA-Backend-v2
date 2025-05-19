@@ -1,14 +1,15 @@
 package project.coca.schedule;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.schedule.request.GroupScheduleRequest;
-import project.coca.schedule.response.GroupScheduleResponse;
-import project.coca.schedule.response.GroupScheduleSummaryResponse;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
+import project.coca.schedule.request.GroupScheduleRequest;
+import project.coca.schedule.response.GroupScheduleResponse;
+import project.coca.schedule.response.GroupScheduleSummaryResponse;
 import project.coca.schedule.response.PersonalScheduleResponse;
 
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @RestController
+@Slf4j
 @RequestMapping("/api/group-schedule")
 public class GroupScheduleController {
     private final GroupScheduleService groupScheduleService;
@@ -32,7 +34,7 @@ public class GroupScheduleController {
      * @param endDate   예시 : 2024-05-31
      * @return ApiResponse
      */
-    @GetMapping("/groupScheduleSummaryReq")
+    @GetMapping("/summary")
     public ApiResponse<List<GroupScheduleSummaryResponse>> groupScheduleSummaryReq(
             @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         try {
@@ -80,10 +82,10 @@ public class GroupScheduleController {
      * @return ApiResponse
      * @body requestSchedule
      */
-    @PostMapping(value = "/groupScheduleRegistrationReq", consumes = "multipart/form-data")
+    @PostMapping(value = "/add", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleRegistrationReq(
-            @RequestPart("scheduleData") GroupScheduleRequest requestSchedule,
-            @RequestPart(value = "scheduleFiles", required = false) MultipartFile[] files) {
+            @RequestPart("data") GroupScheduleRequest requestSchedule,
+            @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
         try {
             GroupScheduleResponse registGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(requestSchedule, files));
 
@@ -103,19 +105,17 @@ public class GroupScheduleController {
      * @return ApiResponse
      * @body requestSchedule, scheduleId
      */
-    @PostMapping(value = "/groupScheduleUpdateReq", consumes = "multipart/form-data")
+    @PostMapping(value = "/update", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleUpdateReq(
-            @RequestPart("scheduleData") GroupScheduleRequest requestSchedule,
-            @RequestPart(value = "scheduleFiles", required = false) MultipartFile[] files) {
+            @RequestPart("data") GroupScheduleRequest requestSchedule,
+            @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
         try {
             GroupScheduleResponse updateGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, updateGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어 있습니다.");
         } catch (Exception e) {
-            e.printStackTrace();
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -128,12 +128,11 @@ public class GroupScheduleController {
      * @param memberId   회원 개인 id
      * @return ApiResponse
      */
-    @GetMapping("/groupScheduleDeleteReq")
+    @DeleteMapping("/delete")
     public ApiResponse<Boolean> groupScheduleDeleteReq(
             @RequestParam Long groupId, @RequestParam Long scheduleId, @RequestParam String memberId) {
         try {
             boolean result = groupScheduleService.groupScheduleDelete(groupId, scheduleId, memberId);
-
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -148,7 +147,7 @@ public class GroupScheduleController {
      * @param memberId   회원 개인 id
      * @return ApiResponse
      */
-    @GetMapping("/setGroupScheduleToPersonalScheduleReq")
+    @PostMapping("/heart")
     public ApiResponse<PersonalScheduleResponse> setGroupScheduleToPersonalScheduleReq(
             @RequestParam Long groupId, @RequestParam Long scheduleId, @RequestParam String memberId) {
         try {
@@ -171,7 +170,7 @@ public class GroupScheduleController {
      * @param date     선택한 날짜
      * @return ApiResponse
      */
-    @GetMapping("/setPersonalScheduleToGroupScheduleReq")
+    @GetMapping("/bringMySchedule")
     public ApiResponse<List<GroupScheduleResponse>> setPersonalScheduleToGroupScheduleReq(
             @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate date) {
         try {

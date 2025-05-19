@@ -8,15 +8,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.auth.jwt.TokenDto;
-import project.coca.member.request.MemberLoginRequest;
-import project.coca.member.request.MemberJoinRequest;
-import project.coca.member.request.MemberUpdateRequest;
-import project.coca.member.response.InterestForTag;
-import project.coca.member.response.MemberResponse;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
-
+import project.coca.member.request.MemberJoinRequest;
+import project.coca.member.request.MemberLoginRequest;
+import project.coca.member.request.MemberUpdateRequest;
+import project.coca.member.response.InterestForTag;
+import project.coca.member.response.MemberResponse;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -59,7 +58,7 @@ public class MemberController {
      */
     @PostMapping(value = "/joinReq", consumes = {"multipart/form-data"})
     public ApiResponse<MemberResponse> join(@RequestPart("data") MemberJoinRequest joinMember,
-                                               @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+                                            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         try {
             MemberResponse joinResult = MemberResponse.of(memberService.joinMember(joinMember, profileImage));
             return ApiResponse.response(ResponseCode.OK, joinResult);
@@ -81,15 +80,13 @@ public class MemberController {
         } catch (NoSuchElementException e) {
             // RequestParam 데이터에 조회되지 않는 데이터 있는 경우. 이 경우에는 아이디 조회 안되는거라 이런 메시지..~
             return ApiResponse.fail(ErrorCode.BAD_REQUEST, "동일한 아이디의 회원이 이미 존재합니다.");
-        }
-        catch (BadCredentialsException e) {
+        } catch (BadCredentialsException e) {
             return ApiResponse.fail(ErrorCode.BAD_REQUEST,
                     """
-                    아이디(로그인 전용 아이디) 또는 비밀번호를 잘못 입력했습니다.
-                    입력하신 내용을 다시 확인해주세요.
-                    """);
-        }
-        catch (Exception e) {
+                            아이디(로그인 전용 아이디) 또는 비밀번호를 잘못 입력했습니다.
+                            입력하신 내용을 다시 확인해주세요.
+                            """);
+        } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -154,9 +151,9 @@ public class MemberController {
     /**
      * 개인정보수정
      */
-    @PostMapping(value = "/memberInfoUpdateReq", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/update", consumes = {"multipart/form-data"})
     public ApiResponse<MemberResponse> updateAccountInfo(@RequestPart("data") MemberUpdateRequest newInfo,
-                                                           @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+                                                         @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         System.out.println("isNull = " + (profileImage == null));
 
         try {
