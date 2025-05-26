@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.domain.personal.Member;
-import project.coca.domain.personal.PersonalSchedule;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
+import project.coca.domain.personal.Member;
+import project.coca.domain.personal.PersonalSchedule;
 import project.coca.schedule.request.PersonalScheduleRequest;
 import project.coca.schedule.response.PersonalScheduleResponse;
 import project.coca.schedule.response.PersonalScheduleSummaryResponse;
@@ -96,8 +96,8 @@ public class PersonalScheduleController {
      * NOT_FOUND: memberId로 회원이 조회되지 않는 경우
      * CREATED: 그 외 정상, 해당 기간 존재하는 일정 반환
      */
-    @GetMapping("/detail/date")
-    public ApiResponse<List<PersonalScheduleResponse>> getPersonalSchedulesByDates(
+    @GetMapping("/detail")
+    public ApiResponse<List<PersonalScheduleResponse>> detail(
             @RequestParam String memberId,
             @RequestParam LocalDate date) {
         log.info("Get personal schedules by dates: {}", memberId);

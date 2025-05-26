@@ -55,16 +55,16 @@ public class GroupScheduleController {
     /**
      * 그룹 일정 상세 정보 조회
      *
-     * @param groupId     조회 할 그룹 id
-     * @param memberId    회원 개인 id
-     * @param inquiryDate 예시 : 2024-05-01
+     * @param groupId  조회 할 그룹 id
+     * @param memberId 회원 개인 id
+     * @param date     예시 : 2024-05-01
      * @return ApiResponse
      */
-    @GetMapping("/groupScheduleSpecificReq")
-    public ApiResponse<List<GroupScheduleResponse>> groupScheduleSpecificReq(
-            @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate inquiryDate) {
+    @GetMapping("/detail")
+    public ApiResponse<List<GroupScheduleResponse>> detail(
+            @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate date) {
         try {
-            List<GroupScheduleResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, memberId, inquiryDate, inquiryDate)
+            List<GroupScheduleResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, memberId, date, date)
                     .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, groupScheduleList);
