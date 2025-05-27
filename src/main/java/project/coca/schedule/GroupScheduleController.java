@@ -8,6 +8,7 @@ import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
 import project.coca.schedule.request.GroupScheduleRequest;
+import project.coca.schedule.request.HeartRequest;
 import project.coca.schedule.response.GroupScheduleResponse;
 import project.coca.schedule.response.GroupScheduleSummaryResponse;
 import project.coca.schedule.response.PersonalScheduleResponse;
@@ -142,16 +143,20 @@ public class GroupScheduleController {
     /**
      * 개인 일정으로 저장하기(하트 기능)
      *
-     * @param groupId    조회 할 그룹 id
-     * @param scheduleId 저장 할 스케쥴 id
-     * @param memberId   회원 개인 id
+     * @param request 조회 할 그룹 id, 저장 할 스케쥴 id, 회원 개인 id
      * @return ApiResponse
      */
     @PostMapping("/heart")
     public ApiResponse<PersonalScheduleResponse> setGroupScheduleToPersonalScheduleReq(
-            @RequestParam Long groupId, @RequestParam Long scheduleId, @RequestParam String memberId) {
+            @RequestBody HeartRequest request) {
         try {
-            PersonalScheduleResponse result = PersonalScheduleResponse.of(groupScheduleService.setGroupScheduleToPersonalSchedule(groupId, scheduleId, memberId));
+            PersonalScheduleResponse result = PersonalScheduleResponse.of(
+                    groupScheduleService.setGroupScheduleToPersonalSchedule(
+                            request.getGroupId(),
+                            request.getScheduleId(),
+                            request.getMemberId()
+                    )
+            );
 
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (NoSuchElementException e) {
