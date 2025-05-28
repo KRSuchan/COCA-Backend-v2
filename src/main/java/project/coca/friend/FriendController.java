@@ -3,11 +3,11 @@ package project.coca.friend;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import project.coca.domain.personal.Friend;
-import project.coca.domain.personal.PersonalSchedule;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
+import project.coca.domain.personal.Friend;
+import project.coca.domain.personal.PersonalSchedule;
 import project.coca.friend.response.FriendResponse;
 import project.coca.friend.response.FriendScheduleResponse;
 
@@ -28,9 +28,9 @@ public class FriendController {
      * @param friendId 친구 관계 id 필요
      * @return : 일정 start, end, 일정 제목
      */
-    @GetMapping("/schedule/friendId/{friendId}")
-    public ApiResponse<List<FriendScheduleResponse>> getFriendSchedule(@PathVariable Long friendId) {
-        log.info("find Friend Schedule friendId {}", friendId);
+    @GetMapping("/schedule")
+    public ApiResponse<List<FriendScheduleResponse>> getFriendSchedule(@RequestParam Long friendId) {
+        log.info("find Friend Schedule {}", friendId);
         try {
             List<PersonalSchedule> schedules = friendService.findFriendSchedule(friendId);
             List<FriendScheduleResponse> data = schedules
