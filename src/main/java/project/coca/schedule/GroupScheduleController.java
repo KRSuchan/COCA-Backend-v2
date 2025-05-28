@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
+import project.coca.schedule.request.BringMyScheduleRequest;
 import project.coca.schedule.request.GroupScheduleRequest;
 import project.coca.schedule.request.HeartRequest;
 import project.coca.schedule.response.GroupScheduleResponse;
@@ -170,16 +171,14 @@ public class GroupScheduleController {
     /**
      * 개인 일정 가져오기
      *
-     * @param groupId  조회 할 그룹 id
-     * @param memberId 회원 개인 id
-     * @param date     선택한 날짜
+     * @param request - groupId 조회 할 그룹 id, memberId 회원 개인 id, date 선택한 날짜
      * @return ApiResponse
      */
-    @GetMapping("/bringMySchedule")
-    public ApiResponse<List<GroupScheduleResponse>> setPersonalScheduleToGroupScheduleReq(
-            @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate date) {
+    @PostMapping("/bringMySchedule")
+    public ApiResponse<List<GroupScheduleResponse>> bringMySchedule(
+            @RequestBody BringMyScheduleRequest request) {
         try {
-            List<GroupScheduleResponse> result = groupScheduleService.setPersonalScheduleToGroupSchedule(groupId, memberId, date)
+            List<GroupScheduleResponse> result = groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), request.getMemberId(), request.getDate())
                     .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, result);
