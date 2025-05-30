@@ -133,7 +133,7 @@ public class MemberController {
     /**
      * 개인정보조회
      */
-    @PostMapping("/memberInfoInquiryReq")
+    @PostMapping("/info")
     public ApiResponse<MemberResponse> getAccountInfo(@RequestBody MemberLoginRequest inquiryMember) {
         try {
             MemberResponse inquiryResult = MemberResponse.of(memberService.getMemberInfo(inquiryMember));
