@@ -107,7 +107,7 @@ public class GroupScheduleController {
      * @return ApiResponse
      * @body requestSchedule, scheduleId
      */
-    @PostMapping(value = "/update", consumes = "multipart/form-data")
+    @PutMapping(value = "/update", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleUpdateReq(
             @RequestPart("data") GroupScheduleRequest requestSchedule,
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
