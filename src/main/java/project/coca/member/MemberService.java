@@ -236,7 +236,7 @@ public class MemberService {
         Member member = memberRepository.findById(newInfo.getId())
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
         // password 설정
-        if (!newInfo.getPassword().isEmpty() && !newInfo.getPassword().isBlank()) {
+        if (newInfo.getPassword() != null && !newInfo.getPassword().isEmpty() && !newInfo.getPassword().isBlank()) {
             member.setPassword(passwordEncoder.encode(newInfo.getPassword()));
         }
         // 회원 닉네임 설정
@@ -256,7 +256,9 @@ public class MemberService {
         member.setInterests(memberInterest);
 
         // 프로필 이미지 설정
-        if (newInfo.getProfileImageUrl().equals(s3Url + DEFAULT_PROFILE_IMAGE_PATH)) {
+        if (newInfo.getProfileImageUrl() == null) {
+            // profileImage가 null일 경우
+        } else if (newInfo.getProfileImageUrl().equals(s3Url + DEFAULT_PROFILE_IMAGE_PATH)) {
             // url이 디폴트 이미지 url과 동일하면 디폴트 이미지
             member.setProfileImgPath(s3Url + DEFAULT_PROFILE_IMAGE_PATH);
         } else if (!newInfo.getProfileImageUrl().equals(member.getProfileImgPath())) {
