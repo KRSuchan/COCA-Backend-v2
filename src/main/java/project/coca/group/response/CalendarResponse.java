@@ -18,7 +18,13 @@ public class CalendarResponse {
                 .groupId(group.getId())
                 .groupName(group.getName())
                 .isAdmin(group.getAdmin().getId().equals(member.getId()))
-                .isManager(group.getGroupManager().stream().anyMatch(groupManager -> groupManager.getId().equals(group.getId())))
+                .isManager(group
+                        .getGroupManager()
+                        .stream()
+                        .anyMatch(
+                                groupManager -> groupManager
+                                        .getGroupManager()
+                                        .getId().equals(member.getId())))
                 .build();
     }
 }
