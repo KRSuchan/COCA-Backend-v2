@@ -4,10 +4,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -18,12 +20,10 @@ import java.io.IOException;
  */
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-
-    public JwtFilter(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+    private final JwtRedisService jwtRedisService;
 
     @Override
     protected void doFilterInternal(
@@ -31,26 +31,26 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String token = jwtTokenProvider.resolveToken(request);
+        String accessToken = jwtTokenProvider.resolveToken(request);
         try {
-            // 토큰 로그 출력 (디버깅용)
-            if (token == null) {
-                log.warn("JWT token is missing in the request");
-            } else {
-                log.info("JWT token extracted: {}", token);
-            }
-
             // 토큰이 유효한 경우 SecurityContext에 인증 정보 저장
-            if (token != null && jwtTokenProvider.validateToken(token, request)) {
-                Authentication auth = jwtTokenProvider.getAuthentication(token);
-                log.info("Authentication success: {}", auth);
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (accessToken != null && jwtTokenProvider.validateToken(accessToken, request)) {
+                Object result = jwtRedisService.getValue(accessToken);
+                if (result instanceof UserSession session) {
+                    UserDetails userDetails = new CustomUserDetails(session);
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    log.warn("유효한 토큰이지만 Redis에 회원 정보가 없습니다.");
+                }
             }
         } catch (RedisConnectionFailureException e) {
-            log.error("Redis connection failure: {}", e.getMessage(), e);
+            log.error("Redis connection 실패: {}", e.getMessage(), e);
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\": \"Redis connection failure\"}");
+            response.getWriter().write("{\"error\": \"Redis connection 실패\"}");
             return;
         } catch (Exception e) {
             log.error("Unexpected error during JWT processing: {}", e.getMessage(), e);

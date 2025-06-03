@@ -9,6 +9,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -85,13 +86,17 @@ public class MemberService {
      */
     @ExeTimer
     public TokenDto login(MemberLoginRequest loginMember) {
+        // Authentication 획득
         Authentication authentication = getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+        // username 추출
+        String username = authentication.getName();
+        // roles 추천
+        List<String> roles = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
         // 인증 정보를 기반으로 JWT 토큰 생성
-        TokenDto tokenDto = new TokenDto(
-                jwtTokenProvider.createAccessToken(authentication),
-                jwtTokenProvider.createRefreshToken(authentication.getName())
+        return new TokenDto(
+                jwtTokenProvider.createAccessToken(username, roles),
+                jwtTokenProvider.createRefreshToken(username)
         );
-        return tokenDto;
     }
 
     /**
@@ -124,13 +129,12 @@ public class MemberService {
 
         // 2. 실제 검증이 이루어지는 부분 (AuthenticationToken 이용)
         // authenticate 매서드가 실행될 때 UserDetailsServiceImpl.loadUserByUsername() 메서드가 실행
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-        return authentication;
+        return authenticationManager.authenticate(authenticationToken);
     }
 
     public Boolean logout() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        jwtRedisService.deleteToken(user.getUsername());
+        jwtRedisService.deleteValue(user.getUsername());
         return true;
     }
 

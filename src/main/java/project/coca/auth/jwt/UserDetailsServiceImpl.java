@@ -29,9 +29,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     // 해당하는 User 의 데이터가 존재한다면 UserDetails 객체로 만들어서 리턴
-    private UserDetails createUserDetails(Member member) {
+    public UserDetails createUserDetails(Member member) {
         List<GrantedAuthority> authorities =
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.getRole()));
-        return new User(member.getId(),member.getPassword(), authorities);
+        return new User(member.getId(), member.getPassword(), authorities);
     }
 }

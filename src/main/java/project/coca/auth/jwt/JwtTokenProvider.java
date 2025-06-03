@@ -1,8 +1,6 @@
 package project.coca.auth.jwt;
 
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -11,31 +9,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtTokenProvider {
-    private static final Long DEFAULT_ACCESS_EXPIRATION_TIME = 1000L * 60 * 60; // 1시간
+    private static final Long DEFAULT_ACCESS_EXPIRATION_TIME = 1000L * 60 * 3; // 3분
     private static final Long DEFAULT_REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 3; // 3시간
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final JwtRedisService jwtRedisService;
     private final Key key;
     private final @Lazy UserDetailsService userDetailsService;
 
     @Autowired
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            RedisTemplate<String, String> redisTemplate,
+                            RedisTemplate<String, Object> redisTemplate,
                             JwtRedisService jwtRedisService,
                             @Lazy UserDetailsService userDetailsService) {
         this.redisTemplate = redisTemplate;
@@ -50,21 +46,28 @@ public class JwtTokenProvider {
         }
     }
 
-    public String createAccessToken(Authentication authentication) {
-        return generateToken(authentication.getName(), DEFAULT_ACCESS_EXPIRATION_TIME);
+    public String createAccessToken(String username, List<String> roles) {
+        String accessToken = generateToken(username, DEFAULT_ACCESS_EXPIRATION_TIME);
+        try {
+            // 오류 발생
+            jwtRedisService.setValue(accessToken, new UserSession(username, roles), DEFAULT_ACCESS_EXPIRATION_TIME);
+        } catch (Exception e) {
+            log.error("Redis operation failed: {}", e.getMessage());
+        }
+        return accessToken;
     }
 
     public String createRefreshToken(String username) {
         String refreshToken = generateToken(username, DEFAULT_REFRESH_EXPIRATION_TIME);
         try {
-            jwtRedisService.setToken(username, refreshToken, DEFAULT_REFRESH_EXPIRATION_TIME);
+            jwtRedisService.setValue(refreshToken, username, DEFAULT_REFRESH_EXPIRATION_TIME);
         } catch (Exception e) {
             log.error("Redis operation failed: {}", e.getMessage());
         }
         return refreshToken;
     }
 
-    public String generateToken(String subject, long duration) {
+    private String generateToken(String subject, long duration) {
         Date now = new Date();
         Date expireDate = new Date(now.getTime() + duration);
 
@@ -80,22 +83,24 @@ public class JwtTokenProvider {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
-            log.info("JWT validation failed: {}", e.getMessage());
-            request.setAttribute("exception", e.getClass().getSimpleName());
+        } catch (ExpiredJwtException e) {
+            request.setAttribute("exception", "TokenExpired");
+        } catch (UnsupportedJwtException e) {
+            request.setAttribute("exception", "UnsupportedToken");
+        } catch (MalformedJwtException e) {
+            request.setAttribute("exception", "MalformedToken");
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("exception", "IllegalArgument");
         }
         return false;
     }
 
-    public Authentication getAuthentication(String token) {
-        String username = Jwts.parserBuilder()
+    public String getUsername(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody().getSubject();
-
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     public String resolveToken(HttpServletRequest request) {
