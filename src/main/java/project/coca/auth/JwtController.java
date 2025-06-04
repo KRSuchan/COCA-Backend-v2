@@ -22,7 +22,7 @@ public class JwtController {
     public ApiResponse<TokenDto> reissue(@RequestHeader("Authorization") String accessToken,
                                          @RequestBody RefreshTokenDto refreshToken,
                                          HttpServletRequest request) {
-        log.info("reissue token {} {}", accessToken, refreshToken.getRefreshToken());
+        log.info("reissue token");
         accessToken = accessToken.substring(7);
         try {
             return ApiResponse.response(ResponseCode.OK, jwtService.reissueToken(accessToken, refreshToken.getRefreshToken(), request));

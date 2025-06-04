@@ -15,7 +15,22 @@ import java.time.Duration;
 public class JwtRedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public Object getValue(String key) {
+    public String getUsername(String refreshToken) {
+        return (String) getValue(refreshToken);
+    }
+
+    public UserSession getSession(String accessToken) {
+        return (UserSession) getValue(resolveToken(accessToken));
+    }
+
+    private String resolveToken(String accessToken) {
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            return accessToken.substring(7);
+        }
+        return accessToken;
+    }
+
+    private Object getValue(String key) {
         try {
             return redisTemplate.opsForValue().get(key);
         } catch (Exception e) {

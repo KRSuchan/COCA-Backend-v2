@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtTokenProvider {
-    private static final Long DEFAULT_ACCESS_EXPIRATION_TIME = 1000L * 60 * 3; // 3분
+    private static final Long DEFAULT_ACCESS_EXPIRATION_TIME = 1000L * 60 * 10; // 10분
     private static final Long DEFAULT_REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 3; // 3시간
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -49,7 +49,6 @@ public class JwtTokenProvider {
     public String createAccessToken(String username, List<String> roles) {
         String accessToken = generateToken(username, DEFAULT_ACCESS_EXPIRATION_TIME);
         try {
-            // 오류 발생
             jwtRedisService.setValue(accessToken, new UserSession(username, roles), DEFAULT_ACCESS_EXPIRATION_TIME);
         } catch (Exception e) {
             log.error("Redis operation failed: {}", e.getMessage());
@@ -93,14 +92,6 @@ public class JwtTokenProvider {
             request.setAttribute("exception", "IllegalArgument");
         }
         return false;
-    }
-
-    public String getUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody().getSubject();
     }
 
     public String resolveToken(HttpServletRequest request) {

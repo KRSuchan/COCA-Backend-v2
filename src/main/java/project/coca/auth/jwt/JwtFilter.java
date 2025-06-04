@@ -35,16 +35,12 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             // 토큰이 유효한 경우 SecurityContext에 인증 정보 저장
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken, request)) {
-                Object result = jwtRedisService.getValue(accessToken);
-                if (result instanceof UserSession session) {
-                    UserDetails userDetails = new CustomUserDetails(session);
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                } else {
-                    log.warn("유효한 토큰이지만 Redis에 회원 정보가 없습니다.");
-                }
+                UserSession session = jwtRedisService.getSession(accessToken);
+                UserDetails userDetails = new CustomUserDetails(session);
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (RedisConnectionFailureException e) {
             log.error("Redis connection 실패: {}", e.getMessage(), e);

@@ -23,15 +23,19 @@ public class JwtService {
             if (!jwtTokenProvider.validateToken(refreshToken, request)) {
                 throw new IllegalArgumentException("Invalid Refresh Token");
             }
-            // Access Token 에서 username을 가져옴
-            String username = jwtTokenProvider.getUsername(refreshToken);
+            // Refresh Token 에서 username을 가져옴
+            String username = redisService.getUsername(refreshToken);
             // accessToken 갱신 : member DB 탐색 -> createAccessToken(username, roles)
             redisService.deleteValue(accessToken);
             redisService.deleteValue(refreshToken);
             Member member = memberRepository.findById(username).orElseThrow();
             String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), Collections.singletonList(member.getRole()));
+            UserSession session = redisService.getSession(newAccessToken);
+            log.info("New Access Token ! : {}", newAccessToken);
+            log.info("test new access token : {}", session.getUsername());
             // refreshToken 갱신
             String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+            log.info("New Refresh Token ! : {}", newRefreshToken);
             // 반환
             return new TokenDto(
                     newAccessToken,

@@ -4,10 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.auth.jwt.JwtRedisService;
+import project.coca.auth.jwt.UserSession;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
-import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.schedule.request.PersonalScheduleRequest;
 import project.coca.schedule.response.PersonalScheduleResponse;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/personal-schedule")
 public class PersonalScheduleController {
     private final PersonalScheduleService personalScheduleService;
+    private final JwtRedisService jwtRedisService;
 
     /**
      * 09. 개인 일정 등록
@@ -35,14 +37,13 @@ public class PersonalScheduleController {
      */
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     private ApiResponse<PersonalScheduleResponse> addPersonalSchedule(
+            @RequestHeader("Authorization") String accessToken,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        Member member = request.getMember();
-        log.info("Add personal schedule member: {}", member);
-        log.info("Add personal schedule: {}", personalSchedule);
+        UserSession session = jwtRedisService.getSession(accessToken);
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(member, personalSchedule, attachments);
+            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(session.getUsername(), personalSchedule, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
         } catch (NoSuchElementException e) {
@@ -127,14 +128,14 @@ public class PersonalScheduleController {
      */
     @PutMapping("/update")
     private ApiResponse<PersonalScheduleResponse> updatePersonalSchedule(
+            @RequestHeader("Authorization") String accessToken,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        Member member = request.getMember();
-        log.info("Update personal schedule member: {}", member);
+        UserSession session = jwtRedisService.getSession(accessToken);
         log.info("Update personal schedule: {}", personalSchedule);
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.updatePersonalSchedule(member, personalSchedule, attachments);
+            PersonalSchedule savedSchedule = personalScheduleService.updatePersonalSchedule(session.getUsername(), personalSchedule, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
         } catch (NoSuchElementException e) {

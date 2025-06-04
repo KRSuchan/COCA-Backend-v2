@@ -1,9 +1,11 @@
 package project.coca.schedule;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.aop.ExeTimer;
 import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.domain.personal.PersonalScheduleAttachment;
@@ -19,6 +21,7 @@ import java.util.NoSuchElementException;
 
 @Service
 @Transactional
+@Slf4j
 public class PersonalScheduleService {
     private final PersonalScheduleRepository personalScheduleRepository;
     private final MemberRepository memberRepository;
@@ -40,11 +43,13 @@ public class PersonalScheduleService {
      *
      * @param personalSchedule : 작성한 개인 일정 id를 제외한 전체
      * @return : 저장된 개인 일정 return
+     * timer : 첨부파일이 없을때 9~11ms /
      */
-    public PersonalSchedule savePersonalSchedule(Member member,
+    @ExeTimer
+    public PersonalSchedule savePersonalSchedule(String username,
                                                  PersonalSchedule personalSchedule,
                                                  MultipartFile[] attachments) throws IOException {
-        Member foundMember = memberRepository.findById(member.getId())
+        Member foundMember = memberRepository.findById(username)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
         // 일정에 회원 반영
@@ -53,14 +58,13 @@ public class PersonalScheduleService {
         PersonalSchedule savedSchedule = personalScheduleRepository.save(personalSchedule);
 
         // 새로운 첨부 파일 추가
-        if (attachments != null && attachments.length > 0) { // null 체크 추가
+        if (attachments != null) { // null 체크 추가
             for (MultipartFile attachment : attachments) {
-                if (attachment != null) { // 논리 AND 조건으로 수정
-                    saveAttachment(member, savedSchedule, attachment);
+                if (attachment != null) {
+                    saveAttachment(username, savedSchedule, attachment);
                 }
             }
         }
-
         return savedSchedule;
     }
 
@@ -88,10 +92,10 @@ public class PersonalScheduleService {
     /**
      * 12. 개인 일정 수정
      */
-    public PersonalSchedule updatePersonalSchedule(Member member,
+    public PersonalSchedule updatePersonalSchedule(String username,
                                                    PersonalSchedule updatePersonalSchedule,
                                                    MultipartFile[] attachments) throws IOException {
-        Member foundMember = memberRepository.findById(member.getId())
+        Member foundMember = memberRepository.findById(username)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(updatePersonalSchedule.getId())
@@ -121,7 +125,7 @@ public class PersonalScheduleService {
         if (attachments != null && attachments.length > 0) { // null 체크 추가
             for (MultipartFile attachment : attachments) {
                 if (attachment != null) { // 논리 AND 조건으로 수정
-                    saveAttachment(member, foundPersonalSchedule, attachment);
+                    saveAttachment(username, foundPersonalSchedule, attachment);
                 }
             }
         }
@@ -138,8 +142,8 @@ public class PersonalScheduleService {
     }
 
 
-    private void saveAttachment(Member member, PersonalSchedule findPersonalSchedule, MultipartFile attachment) throws IOException {
-        URL savedUrl = s3Service.uploadPersonalScheduleFile(attachment, member.getId(), findPersonalSchedule.getId(), 0);
+    private void saveAttachment(String username, PersonalSchedule findPersonalSchedule, MultipartFile attachment) throws IOException {
+        URL savedUrl = s3Service.uploadPersonalScheduleFile(attachment, username, findPersonalSchedule.getId(), 0);
         PersonalScheduleAttachment personalScheduleAttachment = new PersonalScheduleAttachment();
         personalScheduleAttachment.setFileName(attachment.getOriginalFilename());
         personalScheduleAttachment.setFilePath(savedUrl.toString());

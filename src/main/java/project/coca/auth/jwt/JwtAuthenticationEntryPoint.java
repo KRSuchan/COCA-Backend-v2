@@ -29,10 +29,11 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         }
 
         ApiResponse<?> apiResponse = switch (exceptionType) {
-            case "invalidSignature" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "Invalid signature");
+            case "TokenExpired" -> ApiResponse.fail(ErrorCode.UNAUTHORIZED, "Expired JWT token");
+            case "IllegalArgument" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "Invalid signature");
+            case "MalformedToken" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "JWT token is MalformedToken");
+            case "UnsupportedToken" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "Unsupported JWT token");
             case "invalidJwt" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "Invalid JWT token");
-            case "unsupportedJwt" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "Unsupported JWT token");
-            case "expiredJwt" -> ApiResponse.fail(ErrorCode.UNAUTHORIZED, "Expired JWT token");
             case "nullToken" -> ApiResponse.fail(ErrorCode.BAD_REQUEST, "JWT token is missing");
             default -> ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "Unexpected error occurred");
         };
