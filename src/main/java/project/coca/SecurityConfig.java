@@ -25,8 +25,8 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    private final JwtRedisService jwtRedisService;
-    
+    private final JwtRepository jwtRepository;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -57,11 +57,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/jwt/reissue").permitAll()
                         .requestMatchers("/api/member/validate-id").permitAll()
                         .requestMatchers("/api/member/joinReq").permitAll()
-                        .requestMatchers("/api/member/loginReq").permitAll()
+                        .requestMatchers("/api/member/login").permitAll()
                         .requestMatchers("/api/healthcheck").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(jwtTokenProvider, jwtRedisService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(jwtTokenProvider, jwtRepository), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionConfig) -> exceptionConfig
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)

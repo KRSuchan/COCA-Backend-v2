@@ -23,7 +23,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-    private final JwtRedisService jwtRedisService;
+    private final JwtRepository jwtRepository;
 
     @Override
     protected void doFilterInternal(
@@ -31,11 +31,11 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String accessToken = jwtTokenProvider.resolveToken(request);
+        String accessToken = jwtTokenProvider.resolveToken(request.getHeader("Authorization"));
         try {
             // 토큰이 유효한 경우 SecurityContext에 인증 정보 저장
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken, request)) {
-                UserSession session = jwtRedisService.getSession(accessToken);
+                UserSession session = jwtRepository.getSession(accessToken);
                 UserDetails userDetails = new CustomUserDetails(session);
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(

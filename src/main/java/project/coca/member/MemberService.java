@@ -10,16 +10,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.aop.ExeTimer;
-import project.coca.auth.jwt.JwtRedisService;
-import project.coca.auth.jwt.JwtTokenProvider;
-import project.coca.auth.jwt.TokenDto;
+import project.coca.auth.jwt.*;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Interest;
 import project.coca.domain.tag.Tag;
@@ -43,7 +39,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final TagRepository tagRepository;
     private final InterestRepository interestRepository;
-    private final JwtRedisService jwtRedisService;
+    private final JwtRepository jwtRepository;
+    private final JwtProperties jwtProperties;
     private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -92,11 +89,15 @@ public class MemberService {
         String username = authentication.getName();
         // roles 추천
         List<String> roles = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        // 인증 정보를 기반으로 JWT 토큰 생성
-        return new TokenDto(
-                jwtTokenProvider.createAccessToken(username, roles),
-                jwtTokenProvider.createRefreshToken(username)
-        );
+        // token 생성
+        String accessToken = jwtTokenProvider.createAccessToken(username);
+        String refreshToken = jwtTokenProvider.createRefreshToken(username);
+        log.info("AET : {},\nRET : {}", jwtProperties.getAccessExpirationTime(), jwtProperties.getRefreshExpirationTime());
+        // token 저장
+        jwtRepository.setValue(accessToken, new UserSession(username, roles), jwtProperties.getAccessExpirationTime());
+        jwtRepository.setValue(refreshToken, username, jwtProperties.getRefreshExpirationTime());
+        // 인증 정보를 기반으로 JWT DTO 반환
+        return new TokenDto(accessToken, refreshToken);
     }
 
     /**
@@ -132,10 +133,19 @@ public class MemberService {
         return authenticationManager.authenticate(authenticationToken);
     }
 
-    public Boolean logout() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        jwtRedisService.deleteValue(user.getUsername());
-        return true;
+    /**
+     * 로그아웃
+     *
+     * @return 정상 로그아웃 : true else false;
+     */
+    public Boolean logout(String accessToken, String refreshToken) {
+        try {
+            jwtRepository.deleteValue(accessToken);
+            jwtRepository.deleteValue(refreshToken);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

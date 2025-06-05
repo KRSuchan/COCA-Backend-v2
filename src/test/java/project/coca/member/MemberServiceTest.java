@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import project.coca.auth.jwt.JwtTokenProvider;
 import project.coca.auth.jwt.TokenDto;
@@ -122,7 +121,7 @@ class MemberServiceTest {
         when(fakeAuthentication.getName()).thenReturn("testID");
 
         when(authenticationManager.authenticate(any())).thenReturn(fakeAuthentication);
-        when(jwtTokenProvider.createAccessToken(fakeAuthentication.getName(), fakeAuthentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())).thenReturn("access-token");
+        when(jwtTokenProvider.createAccessToken(fakeAuthentication.getName())).thenReturn("access-token");
         when(jwtTokenProvider.createRefreshToken(fakeAuthentication.getName())).thenReturn("refresh-token");
 
         //when

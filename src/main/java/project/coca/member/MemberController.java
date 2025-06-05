@@ -7,6 +7,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.auth.jwt.JwtTokenProvider;
+import project.coca.auth.jwt.RefreshTokenDto;
 import project.coca.auth.jwt.TokenDto;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
@@ -26,6 +28,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class MemberController {
     private final MemberService memberService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 회원 프로필 이미지 url 조회
@@ -73,7 +76,7 @@ public class MemberController {
     /**
      * 로그인
      */
-    @PostMapping("/loginReq")
+    @PostMapping("/login")
     public ApiResponse<TokenDto> login(@RequestBody MemberLoginRequest loginMember) {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember));
@@ -106,9 +109,12 @@ public class MemberController {
     /**
      * 로그아웃
      */
-    @PostMapping("/logoutReq")
-    public ApiResponse<Boolean> logout() {
-        return ApiResponse.response(ResponseCode.OK, memberService.logout());
+    @PostMapping("/logout")
+    public ApiResponse<Boolean> logout(
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestBody RefreshTokenDto refreshTokenDto) {
+        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
+        return ApiResponse.response(ResponseCode.OK, memberService.logout(accessToken, refreshTokenDto.getRefreshToken()));
     }
 
 

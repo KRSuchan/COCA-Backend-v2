@@ -14,8 +14,9 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtService {
     private final JwtTokenProvider jwtTokenProvider;
-    private final JwtRedisService redisService;
+    private final JwtRepository jwtRepository;
     private final MemberRepository memberRepository;
+    private final JwtProperties properties;
 
     public TokenDto reissueToken(String accessToken, String refreshToken, HttpServletRequest request) {
         try {
@@ -24,23 +25,24 @@ public class JwtService {
                 throw new IllegalArgumentException("Invalid Refresh Token");
             }
             // Refresh Token 에서 username을 가져옴
-            String username = redisService.getUsername(refreshToken);
-            // accessToken 갱신 : member DB 탐색 -> createAccessToken(username, roles)
-            redisService.deleteValue(accessToken);
-            redisService.deleteValue(refreshToken);
+            String username = jwtRepository.getUsername(refreshToken);
             Member member = memberRepository.findById(username).orElseThrow();
-            String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), Collections.singletonList(member.getRole()));
-            UserSession session = redisService.getSession(newAccessToken);
-            log.info("New Access Token ! : {}", newAccessToken);
-            log.info("test new access token : {}", session.getUsername());
-            // refreshToken 갱신
-            String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getId());
-            log.info("New Refresh Token ! : {}", newRefreshToken);
+            username = member.getId();
+            jwtRepository.deleteValue(accessToken);
+            jwtRepository.deleteValue(refreshToken);
+            // token 생성
+            String newAccessToken = jwtTokenProvider.createAccessToken(username);
+            String newRefreshToken = jwtTokenProvider.createRefreshToken(username);
+            // token 저장
+            jwtRepository.setValue(accessToken,
+                    new UserSession(username, Collections.singletonList(member.getRole())),
+                    properties.getAccessExpirationTime());
+            jwtRepository.setValue(refreshToken, username, properties.getRefreshExpirationTime());
+
+            log.info("New Access Token : {}", newAccessToken);
+            log.info("New Refresh Token : {}", newRefreshToken);
             // 반환
-            return new TokenDto(
-                    newAccessToken,
-                    newRefreshToken
-            );
+            return new TokenDto(newAccessToken, newRefreshToken);
         } catch (Exception e) {
             log.error("Token reissue failed: {}", e.getMessage());
             throw new IllegalArgumentException("Token 재발급 실패", e);

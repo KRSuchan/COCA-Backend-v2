@@ -3,70 +3,57 @@ package project.coca.auth.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
 
+/**
+ * JWT 생성/파싱/검증 전담 class
+ */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class JwtTokenProvider {
-    private static final Long DEFAULT_ACCESS_EXPIRATION_TIME = 1000L * 60 * 10; // 10분
-    private static final Long DEFAULT_REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 3; // 3시간
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final JwtRedisService jwtRedisService;
     private final Key key;
-    private final @Lazy UserDetailsService userDetailsService;
+    private final JwtProperties properties;
 
-    @Autowired
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            RedisTemplate<String, Object> redisTemplate,
-                            JwtRedisService jwtRedisService,
-                            @Lazy UserDetailsService userDetailsService) {
-        this.redisTemplate = redisTemplate;
-        this.jwtRedisService = jwtRedisService;
-        this.userDetailsService = userDetailsService;
-
-        try {
-            byte[] keyBytes = Base64.getDecoder().decode(secretKey);
-            this.key = Keys.hmacShaKeyFor(keyBytes);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("Invalid JWT secret key", e);
-        }
+    public JwtTokenProvider(JwtProperties properties) {
+        this.properties = properties;
+        byte[] keyBytes = Base64.getDecoder().decode(properties.getSecret());
+        this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String createAccessToken(String username, List<String> roles) {
-        String accessToken = generateToken(username, DEFAULT_ACCESS_EXPIRATION_TIME);
-        try {
-            jwtRedisService.setValue(accessToken, new UserSession(username, roles), DEFAULT_ACCESS_EXPIRATION_TIME);
-        } catch (Exception e) {
-            log.error("Redis operation failed: {}", e.getMessage());
-        }
-        return accessToken;
+    /**
+     * JWT AccessToken 생성
+     *
+     * @param username
+     * @return String : AccessToken
+     */
+    public String createAccessToken(String username) {
+        return createToken(username, properties.getAccessExpirationTime());
     }
 
+    /**
+     * JWT RefreshToken 생성
+     *
+     * @param username
+     * @return String : RefreshToken
+     */
     public String createRefreshToken(String username) {
-        String refreshToken = generateToken(username, DEFAULT_REFRESH_EXPIRATION_TIME);
-        try {
-            jwtRedisService.setValue(refreshToken, username, DEFAULT_REFRESH_EXPIRATION_TIME);
-        } catch (Exception e) {
-            log.error("Redis operation failed: {}", e.getMessage());
-        }
-        return refreshToken;
+        return createToken(username, properties.getRefreshExpirationTime());
     }
 
-    private String generateToken(String subject, long duration) {
+    /**
+     * JWT 생성
+     *
+     * @param subject
+     * @param duration
+     * @return
+     */
+    private String createToken(String subject, long duration) {
         Date now = new Date();
         Date expireDate = new Date(now.getTime() + duration);
 
@@ -94,8 +81,7 @@ public class JwtTokenProvider {
         return false;
     }
 
-    public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+    public String resolveToken(String bearerToken) {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }

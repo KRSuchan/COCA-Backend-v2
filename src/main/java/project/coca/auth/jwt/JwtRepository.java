@@ -3,16 +3,16 @@ package project.coca.auth.jwt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 
-@Service
+@Repository
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class JwtRedisService {
+public class JwtRepository {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public String getUsername(String refreshToken) {
@@ -20,14 +20,7 @@ public class JwtRedisService {
     }
 
     public UserSession getSession(String accessToken) {
-        return (UserSession) getValue(resolveToken(accessToken));
-    }
-
-    private String resolveToken(String accessToken) {
-        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-            return accessToken.substring(7);
-        }
-        return accessToken;
+        return (UserSession) getValue(accessToken);
     }
 
     private Object getValue(String key) {

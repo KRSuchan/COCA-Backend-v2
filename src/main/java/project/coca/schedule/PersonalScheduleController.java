@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.auth.jwt.JwtRedisService;
+import project.coca.auth.jwt.JwtRepository;
+import project.coca.auth.jwt.JwtTokenProvider;
 import project.coca.auth.jwt.UserSession;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
@@ -25,7 +26,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/personal-schedule")
 public class PersonalScheduleController {
     private final PersonalScheduleService personalScheduleService;
-    private final JwtRedisService jwtRedisService;
+    private final JwtRepository jwtRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 09. 개인 일정 등록
@@ -37,11 +39,12 @@ public class PersonalScheduleController {
      */
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     private ApiResponse<PersonalScheduleResponse> addPersonalSchedule(
-            @RequestHeader("Authorization") String accessToken,
+            @RequestHeader("Authorization") String bearerToken,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        UserSession session = jwtRedisService.getSession(accessToken);
+        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
+        UserSession session = jwtRepository.getSession(accessToken);
         try {
             PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(session.getUsername(), personalSchedule, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
@@ -128,11 +131,12 @@ public class PersonalScheduleController {
      */
     @PutMapping("/update")
     private ApiResponse<PersonalScheduleResponse> updatePersonalSchedule(
-            @RequestHeader("Authorization") String accessToken,
+            @RequestHeader("Authorization") String bearerToken,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        UserSession session = jwtRedisService.getSession(accessToken);
+        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
+        UserSession session = jwtRepository.getSession(accessToken);
         log.info("Update personal schedule: {}", personalSchedule);
         try {
             PersonalSchedule savedSchedule = personalScheduleService.updatePersonalSchedule(session.getUsername(), personalSchedule, attachments);
