@@ -81,7 +81,6 @@ public class MemberController {
         try {
             return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember));
         } catch (NoSuchElementException e) {
-            // RequestParam 데이터에 조회되지 않는 데이터 있는 경우. 이 경우에는 아이디 조회 안되는거라 이런 메시지..~
             return ApiResponse.fail(ErrorCode.BAD_REQUEST, "동일한 아이디의 회원이 이미 존재합니다.");
         } catch (BadCredentialsException e) {
             return ApiResponse.fail(ErrorCode.BAD_REQUEST,
