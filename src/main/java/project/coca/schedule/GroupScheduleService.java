@@ -98,11 +98,11 @@ public class GroupScheduleService {
     그룹이 존재하는지 확인 & 신청한 멤버가 관리자인지 확인 -> 등록
     파일 저장하는 로직 추가 필요
      */
-    public GroupSchedule groupScheduleRegistrationReq(GroupScheduleRequest requestSchedule, MultipartFile[] files) throws NoSuchAlgorithmException, IOException {
+    public GroupSchedule groupScheduleRegistrationReq(String userId, GroupScheduleRequest requestSchedule, MultipartFile[] files) throws NoSuchAlgorithmException, IOException {
         CoGroup group = groupRepository.findById(requestSchedule.getGroupId())
                 .orElseThrow(() -> new NoSuchElementException("그룹이 존재하지 않습니다."));
 
-        GroupManager checkUser = groupManagerRepository.checkUserIsManager(requestSchedule.getMemberId(), requestSchedule.getGroupId())
+        GroupManager checkUser = groupManagerRepository.checkUserIsManager(userId, requestSchedule.getGroupId())
                 .orElseThrow(() -> new NoSuchElementException("해당 그룹의 관리자가 아닙니다."));
 
         GroupSchedule registSchedule = new GroupSchedule();
@@ -133,9 +133,9 @@ public class GroupScheduleService {
     일정이 존재하는지 확인 & 신청한 멤버가 관리자인지 확인 -> 등록
     파일 저장하는 로직 추가 필요
      */
-    public GroupSchedule groupScheduleUpdate(GroupScheduleRequest requestSchedule, MultipartFile[] files)
+    public GroupSchedule groupScheduleUpdate(String userId, GroupScheduleRequest requestSchedule, MultipartFile[] files)
             throws NoSuchAlgorithmException, IOException {
-        GroupManager checkUser = groupManagerRepository.checkUserIsManager(requestSchedule.getMemberId(), requestSchedule.getGroupId())
+        GroupManager checkUser = groupManagerRepository.checkUserIsManager(userId, requestSchedule.getGroupId())
                 .orElseThrow(() -> new NoSuchElementException("해당 그룹의 관리자가 아닙니다."));
 
         GroupSchedule updateSchedule = groupScheduleRepository.findById(requestSchedule.getScheduleId())

@@ -1,7 +1,7 @@
 package project.coca.schedule;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,21 +22,12 @@ import java.util.NoSuchElementException;
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class PersonalScheduleService {
     private final PersonalScheduleRepository personalScheduleRepository;
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final PersonalScheduleAttachmentRepository personalScheduleAttachmentRepository;
-
-    @Autowired
-    public PersonalScheduleService(PersonalScheduleRepository personalScheduleRepository,
-                                   MemberRepository memberRepository,
-                                   S3Service s3Service, PersonalScheduleAttachmentRepository personalScheduleAttachmentRepository) {
-        this.personalScheduleRepository = personalScheduleRepository;
-        this.memberRepository = memberRepository;
-        this.s3Service = s3Service;
-        this.personalScheduleAttachmentRepository = personalScheduleAttachmentRepository;
-    }
 
     /**
      * 09. 개인 일정 등록
@@ -46,6 +37,7 @@ public class PersonalScheduleService {
      * timer : 첨부파일이 없을때 9~11ms /
      */
     @ExeTimer
+    @Transactional
     public PersonalSchedule savePersonalSchedule(String username,
                                                  PersonalSchedule personalSchedule,
                                                  MultipartFile[] attachments) throws IOException {
@@ -77,10 +69,8 @@ public class PersonalScheduleService {
      * @param end      기간 끝
      * @return List<PersonalSchedule>
      */
+    @ExeTimer
     public List<PersonalSchedule> findPersonalSchedulesByDates(String memberId, LocalDate start, LocalDate end) {
-        Member member =
-                memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
-
         // LocalDate 에서 LocalDateTime 변환
         LocalDateTime startDT = start.atStartOfDay();
         LocalDateTime endDT = end.atTime(LocalTime.of(23, 59, 59));
@@ -92,15 +82,13 @@ public class PersonalScheduleService {
     /**
      * 12. 개인 일정 수정
      */
+    @ExeTimer
+    @Transactional
     public PersonalSchedule updatePersonalSchedule(String username,
                                                    PersonalSchedule updatePersonalSchedule,
                                                    MultipartFile[] attachments) throws IOException {
-        Member foundMember = memberRepository.findById(username)
-                .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
-
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(updatePersonalSchedule.getId())
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
-        System.out.println("회원 조회, 일정 조회 완료");
 
         // 수정된 내용 반영
         foundPersonalSchedule.setTitle(updatePersonalSchedule.getTitle());
@@ -115,11 +103,7 @@ public class PersonalScheduleService {
         personalScheduleAttachmentRepository.deleteAllByPersonalSchedule(foundPersonalSchedule);
         personalScheduleAttachmentRepository.flush();
 
-        System.out.println("수정된 내용 반영 완료");
-        System.out.println(foundPersonalSchedule.getAttachments().size());
-        System.out.println(updatePersonalSchedule.getAttachments().size());
         foundPersonalSchedule.setAttachments(updatePersonalSchedule.getAttachments());
-        System.out.println("받아온 첨부파일 " + foundPersonalSchedule.getAttachments().size());
 
         // 새로운 첨부 파일 추가
         if (attachments != null && attachments.length > 0) { // null 체크 추가
@@ -130,12 +114,9 @@ public class PersonalScheduleService {
             }
         }
 
-        System.out.println("첨부파일 반영 완료");
-        System.out.println("총 저장된 첨부파일 " + foundPersonalSchedule.getAttachments().size());
         for (PersonalScheduleAttachment attachment : foundPersonalSchedule.getAttachments()) {
             attachment.setPersonalSchedule(foundPersonalSchedule);
         }
-//        System.out.println(foundPersonalSchedule.getAttachments().get(0).getPersonalSchedule().getId());
         // 수정된 개인 일정 저장
         personalScheduleRepository.save(foundPersonalSchedule);
         return foundPersonalSchedule;
@@ -155,10 +136,9 @@ public class PersonalScheduleService {
     /**
      * 13. 개인 일정 삭제
      */
+    @ExeTimer
+    @Transactional
     public void deletePersonalScheduleById(String memberId, Long personalScheduleId) {
-        Member foundMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
-
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(personalScheduleId)
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않았습니다."));
 

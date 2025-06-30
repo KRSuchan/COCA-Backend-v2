@@ -13,7 +13,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class GroupScheduleRequest {
-    private String memberId; //수정을 시도한 멤버 아이디
     private Long scheduleId;
     private Long groupId;
     private String title;

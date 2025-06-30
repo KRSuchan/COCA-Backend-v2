@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.auth.jwt.JwtRepository;
+import project.coca.auth.jwt.JwtTokenProvider;
+import project.coca.auth.jwt.UserSession;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
@@ -26,21 +29,24 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/group-schedule")
 public class GroupScheduleController {
     private final GroupScheduleService groupScheduleService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtRepository jwtRepository;
 
     /**
      * 그룹 일정 목록 조회
      *
      * @param groupId   조회 할 그룹 id
-     * @param memberId  회원 개인 id
      * @param startDate 예시 : 2024-05-01
      * @param endDate   예시 : 2024-05-31
      * @return ApiResponse
      */
     @GetMapping("/summary")
     public ApiResponse<List<GroupScheduleSummaryResponse>> groupScheduleSummaryReq(
-            @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestParam Long groupId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleSummaryResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, memberId, startDate, endDate)
+            List<GroupScheduleSummaryResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), startDate, endDate)
                     .stream()
                     .map(GroupScheduleSummaryResponse::of)
                     .collect(Collectors.toList());
@@ -57,16 +63,17 @@ public class GroupScheduleController {
     /**
      * 그룹 일정 상세 정보 조회
      *
-     * @param groupId  조회 할 그룹 id
-     * @param memberId 회원 개인 id
-     * @param date     예시 : 2024-05-01
+     * @param groupId 조회 할 그룹 id
+     * @param date    예시 : 2024-05-01
      * @return ApiResponse
      */
     @GetMapping("/detail")
     public ApiResponse<List<GroupScheduleResponse>> detail(
-            @RequestParam Long groupId, @RequestParam String memberId, @RequestParam LocalDate date) {
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestParam Long groupId, @RequestParam LocalDate date) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, memberId, date, date)
+            List<GroupScheduleResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), date, date)
                     .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, groupScheduleList);
@@ -86,10 +93,12 @@ public class GroupScheduleController {
      */
     @PostMapping(value = "/add", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleRegistrationReq(
+            @RequestHeader("Authorization") String bearerToken,
             @RequestPart("data") GroupScheduleRequest requestSchedule,
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            GroupScheduleResponse registGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(requestSchedule, files));
+            GroupScheduleResponse registGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(session.getUsername(), requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, registGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -109,10 +118,12 @@ public class GroupScheduleController {
      */
     @PutMapping(value = "/update", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleUpdateReq(
+            @RequestHeader("Authorization") String bearerToken,
             @RequestPart("data") GroupScheduleRequest requestSchedule,
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            GroupScheduleResponse updateGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(requestSchedule, files));
+            GroupScheduleResponse updateGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(session.getUsername(), requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, updateGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -127,14 +138,15 @@ public class GroupScheduleController {
      *
      * @param groupId    조회 할 그룹 id
      * @param scheduleId 삭제 할 스케쥴 id
-     * @param memberId   회원 개인 id
      * @return ApiResponse
      */
     @DeleteMapping("/delete")
     public ApiResponse<Boolean> groupScheduleDeleteReq(
-            @RequestParam Long groupId, @RequestParam Long scheduleId, @RequestParam String memberId) {
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestParam Long groupId, @RequestParam Long scheduleId) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            boolean result = groupScheduleService.groupScheduleDelete(groupId, scheduleId, memberId);
+            boolean result = groupScheduleService.groupScheduleDelete(groupId, scheduleId, session.getUsername());
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -149,16 +161,17 @@ public class GroupScheduleController {
      */
     @PostMapping("/heart")
     public ApiResponse<PersonalScheduleResponse> setGroupScheduleToPersonalScheduleReq(
+            @RequestHeader("Authorization") String bearerToken,
             @RequestBody HeartRequest request) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
             PersonalScheduleResponse result = PersonalScheduleResponse.of(
                     groupScheduleService.setGroupScheduleToPersonalSchedule(
                             request.getGroupId(),
                             request.getScheduleId(),
-                            request.getMemberId()
+                            session.getUsername()
                     )
             );
-
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (NoSuchElementException e) {
             // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
@@ -176,9 +189,11 @@ public class GroupScheduleController {
      */
     @PostMapping("/bringMySchedule")
     public ApiResponse<List<GroupScheduleResponse>> bringMySchedule(
+            @RequestHeader("Authorization") String bearerToken,
             @RequestBody BringMyScheduleRequest request) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleResponse> result = groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), request.getMemberId(), request.getDate())
+            List<GroupScheduleResponse> result = groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), session.getUsername(), request.getDate())
                     .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, result);

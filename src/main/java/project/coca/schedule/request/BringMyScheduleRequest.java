@@ -9,6 +9,5 @@ import java.time.LocalDate;
 @Setter
 public class BringMyScheduleRequest {
     private Long groupId;
-    private String memberId;
     private LocalDate date;
 }

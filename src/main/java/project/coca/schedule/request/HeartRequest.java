@@ -8,5 +8,4 @@ import lombok.Setter;
 public class HeartRequest {
     private Long groupId;
     private Long scheduleId;
-    private String memberId;
 }

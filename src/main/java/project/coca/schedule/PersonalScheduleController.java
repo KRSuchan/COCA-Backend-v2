@@ -59,7 +59,6 @@ public class PersonalScheduleController {
     /**
      * 10. 개인 일정 목록 조회 (요약 정보)
      *
-     * @param memberId  회원 개인 id
      * @param startDate 예시 : 2024-05-01
      * @param endDate   예시 : 2024-05-31
      * @return ApiResponse
@@ -68,15 +67,16 @@ public class PersonalScheduleController {
      */
     @GetMapping("/summary/between-dates")
     private ApiResponse<List<PersonalScheduleSummaryResponse>> getPersonalScheduleSummaryList(
-            @RequestParam String memberId,
+            @RequestHeader("Authorization") String bearerToken,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
-        log.info("getPersonalScheduleSummaryList: {}", memberId);
         log.info("Start date: {}", startDate);
         log.info("End date: {}", endDate);
+        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
+        UserSession session = jwtRepository.getSession(accessToken);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(memberId, startDate, endDate);
+                    personalScheduleService.findPersonalSchedulesByDates(session.getUsername(), startDate, endDate);
             List<PersonalScheduleSummaryResponse> data = schedules
                     .stream()
                     .map(PersonalScheduleSummaryResponse::of)
@@ -94,21 +94,21 @@ public class PersonalScheduleController {
      * 11. 개인 일정 상세 정보 조회
      * (FrontEnd 요청사항으로 LIST 반환)
      *
-     * @param memberId 회원 개인 id
-     * @param date     예시 : 2024-05-01
+     * @param date 예시 : 2024-05-01
      * @return ApiResponse
      * NOT_FOUND: memberId로 회원이 조회되지 않는 경우
      * CREATED: 그 외 정상, 해당 기간 존재하는 일정 반환
      */
     @GetMapping("/detail")
     public ApiResponse<List<PersonalScheduleResponse>> detail(
-            @RequestParam String memberId,
+            @RequestHeader("Authorization") String bearerToken,
             @RequestParam LocalDate date) {
-        log.info("Get personal schedules by dates: {}", memberId);
         log.info("Get personal schedules by dates: {}", date);
+        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
+        UserSession session = jwtRepository.getSession(accessToken);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(memberId, date, date);
+                    personalScheduleService.findPersonalSchedulesByDates(session.getUsername(), date, date);
             List<PersonalScheduleResponse> data = schedules
                     .stream()
                     .map(PersonalScheduleResponse::of)
@@ -153,19 +153,18 @@ public class PersonalScheduleController {
     /**
      * 13. 개인 일정 삭제
      *
-     * @param memberId           : 회원 계정
      * @param personalScheduleId : 삭제할 일정 id
      * @return ApiResponse
      * NOT_FOUND : memberId 혹은 personalScheduleId 로 회원이 조회되지 않는 경우
      * OK : 삭제 완료
      */
     @DeleteMapping("/delete")
-    private ApiResponse<?> deletePersonalScheduleById(@RequestParam String memberId,
-                                                      @RequestParam Long personalScheduleId) {
-        log.info("Delete personal schedule personalSchedule Id: {}", personalScheduleId);
-        log.info("Delete personal schedule member Id: {}", memberId);
+    private ApiResponse<?> deletePersonalScheduleById(
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestParam Long personalScheduleId) {
+        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            personalScheduleService.deletePersonalScheduleById(memberId, personalScheduleId);
+            personalScheduleService.deletePersonalScheduleById(session.getUsername(), personalScheduleId);
             return ApiResponse.success(ResponseCode.OK, "삭제 성공");
         } catch (NoSuchElementException e) {
             // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
