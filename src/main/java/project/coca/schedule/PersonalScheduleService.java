@@ -47,10 +47,11 @@ public class PersonalScheduleService {
         // 일정에 회원 반영
         personalSchedule.setMember(foundMember);
 
+        // 일정 저장
         PersonalSchedule savedSchedule = personalScheduleRepository.save(personalSchedule);
 
         // 새로운 첨부 파일 추가
-        if (attachments != null) { // null 체크 추가
+        if (attachments != null) { // 첨부파일이 존재 확인
             for (MultipartFile attachment : attachments) {
                 if (attachment != null) {
                     saveAttachment(username, savedSchedule, attachment);
@@ -87,50 +88,50 @@ public class PersonalScheduleService {
     public PersonalSchedule updatePersonalSchedule(String username,
                                                    PersonalSchedule updatePersonalSchedule,
                                                    MultipartFile[] attachments) throws IOException {
-        PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(updatePersonalSchedule.getId())
+        PersonalSchedule found = personalScheduleRepository.findById(updatePersonalSchedule.getId())
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
 
         // 수정된 내용 반영
-        foundPersonalSchedule.setTitle(updatePersonalSchedule.getTitle());
-        foundPersonalSchedule.setDescription(updatePersonalSchedule.getDescription());
-        foundPersonalSchedule.setLocation(updatePersonalSchedule.getLocation());
-        foundPersonalSchedule.setStartTime(updatePersonalSchedule.getStartTime());
-        foundPersonalSchedule.setEndTime(updatePersonalSchedule.getEndTime());
-        foundPersonalSchedule.setColor(updatePersonalSchedule.getColor());
-        foundPersonalSchedule.setIsPrivate(updatePersonalSchedule.getIsPrivate());
+        found.update(
+                updatePersonalSchedule.getTitle(),
+                updatePersonalSchedule.getDescription(),
+                updatePersonalSchedule.getLocation(),
+                updatePersonalSchedule.getStartTime(),
+                updatePersonalSchedule.getEndTime(),
+                updatePersonalSchedule.getColor(),
+                updatePersonalSchedule.getIsPrivate()
+        );
 
         // 기존 첨부 파일 삭제
-        personalScheduleAttachmentRepository.deleteAllByPersonalSchedule(foundPersonalSchedule);
-        personalScheduleAttachmentRepository.flush();
-
-        foundPersonalSchedule.setAttachments(updatePersonalSchedule.getAttachments());
+        List<PersonalScheduleAttachment> oldAttachments = found.getAttachments();
+        for (PersonalScheduleAttachment old : oldAttachments) {
+            s3Service.deleteS3File(old.getFilePath());
+        }
+        personalScheduleAttachmentRepository.deleteAllByPersonalSchedule(found);
+        found.getAttachments().clear();
 
         // 새로운 첨부 파일 추가
-        if (attachments != null && attachments.length > 0) { // null 체크 추가
+        if (attachments != null) { // null 체크 추가
             for (MultipartFile attachment : attachments) {
                 if (attachment != null) { // 논리 AND 조건으로 수정
-                    saveAttachment(username, foundPersonalSchedule, attachment);
+                    saveAttachment(username, found, attachment);
                 }
             }
         }
-
-        for (PersonalScheduleAttachment attachment : foundPersonalSchedule.getAttachments()) {
-            attachment.setPersonalSchedule(foundPersonalSchedule);
-        }
-        // 수정된 개인 일정 저장
-        personalScheduleRepository.save(foundPersonalSchedule);
-        return foundPersonalSchedule;
+        
+        return found;
     }
 
 
-    private void saveAttachment(String username, PersonalSchedule findPersonalSchedule, MultipartFile attachment) throws IOException {
-        URL savedUrl = s3Service.uploadPersonalScheduleFile(attachment, username, findPersonalSchedule.getId(), 0);
-        PersonalScheduleAttachment personalScheduleAttachment = new PersonalScheduleAttachment();
-        personalScheduleAttachment.setFileName(attachment.getOriginalFilename());
-        personalScheduleAttachment.setFilePath(savedUrl.toString());
-        personalScheduleAttachment.setPersonalSchedule(findPersonalSchedule);
-        findPersonalSchedule.getAttachments().add(personalScheduleAttachment);
-        System.out.println("총 저장된 첨부파일 " + findPersonalSchedule.getAttachments().size());
+    private void saveAttachment(String username, PersonalSchedule personalSchedule, MultipartFile attachment) throws IOException {
+        URL savedUrl = s3Service.uploadPersonalScheduleFile(attachment, username, personalSchedule.getId(), 0);
+        PersonalScheduleAttachment personalScheduleAttachment = PersonalScheduleAttachment.builder()
+                .fileName(attachment.getOriginalFilename())
+                .filePath(savedUrl.toString())
+                .personalSchedule(personalSchedule)
+                .build();
+        personalSchedule.getAttachments().add(personalScheduleAttachment);
+        log.info("총 저장된 첨부파일 {}", personalSchedule.getAttachments().size());
     }
 
     /**
@@ -139,6 +140,8 @@ public class PersonalScheduleService {
     @ExeTimer
     @Transactional
     public void deletePersonalScheduleById(String memberId, Long personalScheduleId) {
+        Member foundMember = memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않았습니다."));
+
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(personalScheduleId)
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않았습니다."));
 

@@ -1,7 +1,6 @@
 package project.coca.schedule;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,24 +31,15 @@ import java.util.NoSuchElementException;
 @Transactional
 @RequiredArgsConstructor
 public class GroupScheduleService {
-    @Autowired
     private final GroupScheduleRepository groupScheduleRepository;
-    @Autowired
     private final GroupMemberRepository groupMemberRepository;
-    @Autowired
     private final GroupManagerRepository groupManagerRepository;
-    @Autowired
     private final GroupScheduleAttachmentRepository groupScheduleAttachmentRepository;
-    @Autowired
     private final GroupRepository groupRepository;
-    @Autowired
     private final MemberRepository memberRepository;
-    @Autowired
     private final PersonalScheduleRepository personalScheduleRepository;
-    @Autowired
-    private S3Service s3Service;
-    @Autowired
-    private GroupScheduleHeartRepository groupScheduleHeartRepository;
+    private final S3Service s3Service;
+    private final GroupScheduleHeartRepository groupScheduleHeartRepository;
 
     //파일의 md5 생성
     public String generateFileMd5(MultipartFile file) throws NoSuchAlgorithmException, IOException {
@@ -238,30 +228,31 @@ public class GroupScheduleService {
         GroupSchedule groupSchedule = groupScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
 
-        PersonalSchedule personalSchedule = new PersonalSchedule();
-
-        personalSchedule.setMember(member);
-        personalSchedule.setTitle(group.getName() + "그룹의 일정 - " + groupSchedule.getTitle());
-        personalSchedule.setDescription(groupSchedule.getDescription());
-        personalSchedule.setLocation(groupSchedule.getLocation());
-        personalSchedule.setStartTime(groupSchedule.getStartTime());
-        personalSchedule.setEndTime(groupSchedule.getEndTime());
-        personalSchedule.setColor(groupSchedule.getColor());
-        personalSchedule.setIsPrivate(false);
+        PersonalSchedule personalSchedule = PersonalSchedule.builder()
+                .member(member)
+                .title(group.getName() + "그룹의 일정 - " + groupSchedule.getTitle())
+                .description(groupSchedule.getDescription())
+                .location(groupSchedule.getLocation())
+                .startTime(groupSchedule.getStartTime())
+                .endTime(groupSchedule.getEndTime())
+                .color(groupSchedule.getColor())
+                .isPrivate(false)
+                .build();
 
         List<PersonalScheduleAttachment> attachments = new ArrayList<>();
 
-        if (groupSchedule.getGroupScheduleAttachments() != null && groupSchedule.getGroupScheduleAttachments().size() > 0) {
+        if (groupSchedule.getGroupScheduleAttachments() != null && !groupSchedule.getGroupScheduleAttachments().isEmpty()) {
             for (GroupScheduleAttachment attachment : groupSchedule.getGroupScheduleAttachments()) {
-                PersonalScheduleAttachment newAttachment = new PersonalScheduleAttachment();
-                newAttachment.setFilePath(attachment.getFilePath());
-                newAttachment.setFileName(attachment.getFileName());
-                newAttachment.setPersonalSchedule(personalSchedule);
+                PersonalScheduleAttachment newAttachment = PersonalScheduleAttachment.builder()
+                        .filePath(attachment.getFilePath())
+                        .fileName(attachment.getFileName())
+                        .personalSchedule(personalSchedule)
+                        .build();
 
                 attachments.add(newAttachment);
             }
         }
-        personalSchedule.setAttachments(attachments);
+        personalSchedule.update(attachments);
         personalSchedule = personalScheduleRepository.save(personalSchedule);
         // 하트 등록
         GroupScheduleHeart heart = new GroupScheduleHeart();

@@ -39,6 +39,9 @@ public class JwtService {
                     properties.getAccessExpirationTime());
             jwtRepository.setValue(refreshToken, username, properties.getRefreshExpirationTime());
 
+            UserSession session = jwtRepository.getSession(accessToken);
+            log.info("new session by reissued token :{}", session.toString());
+
             log.info("New Access Token : {}", newAccessToken);
             log.info("New Refresh Token : {}", newRefreshToken);
             // 반환

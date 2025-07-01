@@ -1,16 +1,14 @@
 package project.coca.domain.personal;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Getter
-@Setter
-@Entity
+@Builder
 @ToString
-@NoArgsConstructor
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class PersonalScheduleAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,4 +22,10 @@ public class PersonalScheduleAttachment {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "PERSONAL_SCHEDULE_ID")
     private PersonalSchedule personalSchedule;
+
+    public void update(String filename, String filePath, PersonalSchedule personalSchedule) {
+        this.fileName = filename;
+        this.filePath = filePath;
+        this.personalSchedule = personalSchedule;
+    }
 }

@@ -2,18 +2,18 @@ package project.coca.request;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.coca.common.exception.AlreadyReportedException;
 import project.coca.domain.group.CoGroup;
 import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.domain.request.*;
-import project.coca.common.exception.AlreadyReportedException;
 import project.coca.friend.FriendRepository;
+import project.coca.friend.FriendService;
 import project.coca.group.GroupManagerRepository;
 import project.coca.group.GroupMemberRepository;
 import project.coca.group.GroupRepository;
 import project.coca.group.GroupService;
 import project.coca.member.MemberRepository;
-import project.coca.friend.FriendService;
 import project.coca.schedule.PersonalScheduleRepository;
 import project.coca.schedule.ScheduleRequestRepository;
 
@@ -65,27 +65,30 @@ public class RequestService {
     }
 
     private static PersonalSchedule getPersonalSchedule(ScheduleRequest scheduleRequest) {
-        PersonalSchedule personalSchedule = new PersonalSchedule();
         RequestedSchedule requestedSchedule = scheduleRequest.getRequestedSchedule();
-        personalSchedule.setMember(scheduleRequest.getReceiver());
-        return getPersonalSchedule(personalSchedule, requestedSchedule);
-    }
-
-    private static PersonalSchedule getPersonalSchedule(PersonalSchedule personalSchedule, RequestedSchedule requestedSchedule) {
-        personalSchedule.setTitle(requestedSchedule.getTitle());
-        personalSchedule.setDescription(requestedSchedule.getDescription());
-        personalSchedule.setColor(requestedSchedule.getColor());
-        personalSchedule.setStartTime(requestedSchedule.getStartTime());
-        personalSchedule.setEndTime(requestedSchedule.getEndTime());
-        personalSchedule.setLocation(requestedSchedule.getLocation());
-        personalSchedule.setIsPrivate(false);
-        return personalSchedule;
+        return PersonalSchedule.builder()
+                .member(scheduleRequest.getReceiver())
+                .title(requestedSchedule.getTitle())
+                .description(requestedSchedule.getDescription())
+                .color(requestedSchedule.getColor())
+                .startTime(requestedSchedule.getStartTime())
+                .endTime(requestedSchedule.getEndTime())
+                .location(requestedSchedule.getLocation())
+                .isPrivate(false)
+                .build();
     }
 
     private static PersonalSchedule getPersonalSchedule(Member sender, RequestedSchedule schedule) {
-        PersonalSchedule personalSchedule = new PersonalSchedule();
-        personalSchedule.setMember(sender);
-        return getPersonalSchedule(personalSchedule, schedule);
+        return PersonalSchedule.builder()
+                .member(sender)
+                .title(schedule.getTitle())
+                .description(schedule.getDescription())
+                .color(schedule.getColor())
+                .startTime(schedule.getStartTime())
+                .endTime(schedule.getEndTime())
+                .location(schedule.getLocation())
+                .isPrivate(false)
+                .build();
     }
 
     /**

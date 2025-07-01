@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GroupScheduleRepository extends JpaRepository<GroupSchedule, Long> {
-    GroupSchedule save(GroupSchedule groupSchedule);
-
     void delete(GroupSchedule groupSchedule);
 
     Optional<GroupSchedule> findById(Long id);

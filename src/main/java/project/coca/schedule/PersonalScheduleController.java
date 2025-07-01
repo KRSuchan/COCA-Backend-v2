@@ -2,11 +2,10 @@ package project.coca.schedule;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.auth.jwt.JwtRepository;
-import project.coca.auth.jwt.JwtTokenProvider;
-import project.coca.auth.jwt.UserSession;
+import project.coca.auth.jwt.CustomUserDetails;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
@@ -26,8 +25,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/personal-schedule")
 public class PersonalScheduleController {
     private final PersonalScheduleService personalScheduleService;
-    private final JwtRepository jwtRepository;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 09. 개인 일정 등록
@@ -38,15 +35,14 @@ public class PersonalScheduleController {
      * CREATED: 그 외 정상 등록한 일정 반환
      */
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
-    private ApiResponse<PersonalScheduleResponse> addPersonalSchedule(
-            @RequestHeader("Authorization") String bearerToken,
+    public ApiResponse<PersonalScheduleResponse> add(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
-        PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
-        UserSession session = jwtRepository.getSession(accessToken);
+        String username = customUserDetails.getUsername();
+        log.info("add Personal Schedule's username : {}", username);
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(session.getUsername(), personalSchedule, attachments);
+            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(username, request.getPersonalSchedule(), attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
         } catch (NoSuchElementException e) {
@@ -66,17 +62,21 @@ public class PersonalScheduleController {
      * CREATED: 그 외 정상, 해당 기간 존재하는 일정 반환
      */
     @GetMapping("/summary/between-dates")
-    private ApiResponse<List<PersonalScheduleSummaryResponse>> getPersonalScheduleSummaryList(
-            @RequestHeader("Authorization") String bearerToken,
+    public ApiResponse<List<PersonalScheduleSummaryResponse>> getSummeryList(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
         log.info("Start date: {}", startDate);
         log.info("End date: {}", endDate);
-        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
-        UserSession session = jwtRepository.getSession(accessToken);
+        String username = customUserDetails.getUsername();
+        log.info("username : {}", username);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(session.getUsername(), startDate, endDate);
+                    personalScheduleService.findPersonalSchedulesByDates(username, startDate, endDate);
+            log.info("schedule cnt : {}", schedules.size());
+            for (PersonalSchedule schedule : schedules) {
+                log.info("color : {}", schedule.getColor());
+            }
             List<PersonalScheduleSummaryResponse> data = schedules
                     .stream()
                     .map(PersonalScheduleSummaryResponse::of)
@@ -84,8 +84,10 @@ public class PersonalScheduleController {
             return ApiResponse.response(ResponseCode.OK, data);
         } catch (NoSuchElementException e) {
             // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
+            log.error("{}", e.getMessage());
             return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어 있습니다.");
         } catch (Exception e) {
+            log.error("{}", e.getMessage());
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -101,14 +103,14 @@ public class PersonalScheduleController {
      */
     @GetMapping("/detail")
     public ApiResponse<List<PersonalScheduleResponse>> detail(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate date) {
         log.info("Get personal schedules by dates: {}", date);
-        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
-        UserSession session = jwtRepository.getSession(accessToken);
+        String username = customUserDetails.getUsername();
+        log.info("{}", username);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(session.getUsername(), date, date);
+                    personalScheduleService.findPersonalSchedulesByDates(username, date, date);
             List<PersonalScheduleResponse> data = schedules
                     .stream()
                     .map(PersonalScheduleResponse::of)
@@ -130,16 +132,14 @@ public class PersonalScheduleController {
      * NOT_FOUND : memberId 혹은 scheduleId 로 조회가 되지 않는 경우
      */
     @PutMapping("/update")
-    private ApiResponse<PersonalScheduleResponse> updatePersonalSchedule(
-            @RequestHeader("Authorization") String bearerToken,
+    public ApiResponse<PersonalScheduleResponse> update(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
-        PersonalSchedule personalSchedule = request.getPersonalSchedule();
-        String accessToken = jwtTokenProvider.resolveToken(bearerToken);
-        UserSession session = jwtRepository.getSession(accessToken);
-        log.info("Update personal schedule: {}", personalSchedule);
+        String username = customUserDetails.getUsername();
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.updatePersonalSchedule(session.getUsername(), personalSchedule, attachments);
+            PersonalSchedule savedSchedule =
+                    personalScheduleService.updatePersonalSchedule(username, request.getPersonalSchedule(), attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
         } catch (NoSuchElementException e) {
@@ -159,12 +159,12 @@ public class PersonalScheduleController {
      * OK : 삭제 완료
      */
     @DeleteMapping("/delete")
-    private ApiResponse<?> deletePersonalScheduleById(
-            @RequestHeader("Authorization") String bearerToken,
+    public ApiResponse<?> delete(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long personalScheduleId) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
-            personalScheduleService.deletePersonalScheduleById(session.getUsername(), personalScheduleId);
+            personalScheduleService.deletePersonalScheduleById(username, personalScheduleId);
             return ApiResponse.success(ResponseCode.OK, "삭제 성공");
         } catch (NoSuchElementException e) {
             // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우

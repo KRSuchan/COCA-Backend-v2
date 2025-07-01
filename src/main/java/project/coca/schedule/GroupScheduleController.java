@@ -2,11 +2,12 @@ package project.coca.schedule;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.auth.jwt.CustomUserDetails;
 import project.coca.auth.jwt.JwtRepository;
 import project.coca.auth.jwt.JwtTokenProvider;
-import project.coca.auth.jwt.UserSession;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
@@ -42,12 +43,12 @@ public class GroupScheduleController {
      */
     @GetMapping("/summary")
     public ApiResponse<List<GroupScheduleSummaryResponse>> groupScheduleSummaryReq(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long groupId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             List<GroupScheduleSummaryResponse> groupScheduleList =
-                    groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), startDate, endDate)
+                    groupScheduleService.groupScheduleInquiry(groupId, username, startDate, endDate)
                             .stream()
                             .map(GroupScheduleSummaryResponse::of)
                             .collect(Collectors.toList());
@@ -70,12 +71,12 @@ public class GroupScheduleController {
      */
     @GetMapping("/detail")
     public ApiResponse<List<GroupScheduleResponse>> detail(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long groupId, @RequestParam LocalDate date) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             List<GroupScheduleResponse> groupScheduleList =
-                    groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), date, date)
+                    groupScheduleService.groupScheduleInquiry(groupId, username, date, date)
                             .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, groupScheduleList);
@@ -95,13 +96,13 @@ public class GroupScheduleController {
      */
     @PostMapping(value = "/add", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleRegistrationReq(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestPart("data") GroupScheduleRequest requestSchedule,
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             GroupScheduleResponse registGroupSchedule =
-                    GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(session.getUsername(), requestSchedule, files));
+                    GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(username, requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, registGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -121,13 +122,13 @@ public class GroupScheduleController {
      */
     @PutMapping(value = "/update", consumes = "multipart/form-data")
     public ApiResponse<GroupScheduleResponse> groupScheduleUpdateReq(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestPart("data") GroupScheduleRequest requestSchedule,
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             GroupScheduleResponse updateGroupSchedule =
-                    GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(session.getUsername(), requestSchedule, files));
+                    GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(username, requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, updateGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -146,11 +147,11 @@ public class GroupScheduleController {
      */
     @DeleteMapping("/delete")
     public ApiResponse<Boolean> groupScheduleDeleteReq(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long groupId, @RequestParam Long scheduleId) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
-            boolean result = groupScheduleService.groupScheduleDelete(groupId, scheduleId, session.getUsername());
+            boolean result = groupScheduleService.groupScheduleDelete(groupId, scheduleId, username);
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (Exception e) {
             return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -165,15 +166,15 @@ public class GroupScheduleController {
      */
     @PostMapping("/heart")
     public ApiResponse<PersonalScheduleResponse> setGroupScheduleToPersonalScheduleReq(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody HeartRequest request) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             PersonalScheduleResponse result = PersonalScheduleResponse.of(
                     groupScheduleService.setGroupScheduleToPersonalSchedule(
                             request.getGroupId(),
                             request.getScheduleId(),
-                            session.getUsername()
+                            username
                     )
             );
             return ApiResponse.response(ResponseCode.OK, result);
@@ -193,12 +194,12 @@ public class GroupScheduleController {
      */
     @PostMapping("/bringMySchedule")
     public ApiResponse<List<GroupScheduleResponse>> bringMySchedule(
-            @RequestHeader("Authorization") String bearerToken,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody BringMyScheduleRequest request) {
-        UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
+        String username = customUserDetails.getUsername();
         try {
             List<GroupScheduleResponse> result =
-                    groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), session.getUsername(), request.getDate())
+                    groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), username, request.getDate())
                             .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, result);

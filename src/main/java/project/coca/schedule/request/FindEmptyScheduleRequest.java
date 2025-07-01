@@ -12,7 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FindEmptyScheduleRequest {
+    @Builder.Default
     private List<String> members = new ArrayList<>();
+    
     private LocalDate startDate; //찾기를 시작하는 날짜 (최대 1년까지 찾어요...)
     private LocalDate endDate; //찾기를 끝내는 날짜 (start~end 사이에서 찾음)
     private int findDay;

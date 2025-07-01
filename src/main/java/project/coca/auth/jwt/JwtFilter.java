@@ -32,10 +32,15 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String accessToken = jwtTokenProvider.resolveToken(request.getHeader("Authorization"));
+        log.info("jwt filter, access token :\"{}\"", accessToken);
         try {
             // 토큰이 유효한 경우 SecurityContext에 인증 정보 저장
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken, request)) {
                 UserSession session = jwtRepository.getSession(accessToken);
+                if (session == null) {
+                    log.warn("No session found for token: {}", accessToken);
+                    throw new IllegalStateException("Session expired or not found in Redis");
+                }
                 UserDetails userDetails = new CustomUserDetails(session);
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(

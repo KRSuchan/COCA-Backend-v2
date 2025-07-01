@@ -96,6 +96,9 @@ public class MemberService {
         // token 저장
         jwtRepository.setValue(accessToken, new UserSession(username, roles), jwtProperties.getAccessExpirationTime());
         jwtRepository.setValue(refreshToken, username, jwtProperties.getRefreshExpirationTime());
+
+        UserSession session = jwtRepository.getSession(accessToken);
+        log.info("로그인 후 세션 :{}", session.toString());
         // 인증 정보를 기반으로 JWT DTO 반환
         return new TokenDto(accessToken, refreshToken);
     }
