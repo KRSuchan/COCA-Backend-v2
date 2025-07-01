@@ -46,10 +46,11 @@ public class GroupScheduleController {
             @RequestParam Long groupId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleSummaryResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), startDate, endDate)
-                    .stream()
-                    .map(GroupScheduleSummaryResponse::of)
-                    .collect(Collectors.toList());
+            List<GroupScheduleSummaryResponse> groupScheduleList =
+                    groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), startDate, endDate)
+                            .stream()
+                            .map(GroupScheduleSummaryResponse::of)
+                            .collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, groupScheduleList);
         } catch (NoSuchElementException e) {
@@ -73,8 +74,9 @@ public class GroupScheduleController {
             @RequestParam Long groupId, @RequestParam LocalDate date) {
         UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleResponse> groupScheduleList = groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), date, date)
-                    .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
+            List<GroupScheduleResponse> groupScheduleList =
+                    groupScheduleService.groupScheduleInquiry(groupId, session.getUsername(), date, date)
+                            .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, groupScheduleList);
         } catch (NoSuchElementException e) {
@@ -98,7 +100,8 @@ public class GroupScheduleController {
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
         UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            GroupScheduleResponse registGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(session.getUsername(), requestSchedule, files));
+            GroupScheduleResponse registGroupSchedule =
+                    GroupScheduleResponse.of(groupScheduleService.groupScheduleRegistrationReq(session.getUsername(), requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, registGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -123,7 +126,8 @@ public class GroupScheduleController {
             @RequestPart(value = "attachments", required = false) MultipartFile[] files) {
         UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            GroupScheduleResponse updateGroupSchedule = GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(session.getUsername(), requestSchedule, files));
+            GroupScheduleResponse updateGroupSchedule =
+                    GroupScheduleResponse.of(groupScheduleService.groupScheduleUpdate(session.getUsername(), requestSchedule, files));
 
             return ApiResponse.response(ResponseCode.OK, updateGroupSchedule);
         } catch (NoSuchAlgorithmException e) {
@@ -193,8 +197,9 @@ public class GroupScheduleController {
             @RequestBody BringMyScheduleRequest request) {
         UserSession session = jwtRepository.getSession(jwtTokenProvider.resolveToken(bearerToken));
         try {
-            List<GroupScheduleResponse> result = groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), session.getUsername(), request.getDate())
-                    .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
+            List<GroupScheduleResponse> result =
+                    groupScheduleService.setPersonalScheduleToGroupSchedule(request.getGroupId(), session.getUsername(), request.getDate())
+                            .stream().map(GroupScheduleResponse::of).collect(Collectors.toList());
 
             return ApiResponse.response(ResponseCode.OK, result);
         } catch (NoSuchElementException e) {
