@@ -1,18 +1,40 @@
 package project.coca.common.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import project.coca.common.ApiResponse;
+import project.coca.common.error.ErrorCode;
 
-@ControllerAdvice
+import jakarta.validation.ConstraintViolationException;
+import java.util.stream.Collectors;
+
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
-        return ResponseEntity
-                .status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body("업로드 파일의 크기가 제한을 초과했습니다.");
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<?> handleValidationException(MethodArgumentNotValidException e) {
+        String errorMessage = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        
+        log.warn("Validation error: {}", errorMessage);
+        return ApiResponse.fail(ErrorCode.BAD_REQUEST, errorMessage);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<?> handleConstraintViolationException(ConstraintViolationException e) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        
+        log.warn("Constraint violation: {}", errorMessage);
+        return ApiResponse.fail(ErrorCode.BAD_REQUEST, errorMessage);
     }
 }

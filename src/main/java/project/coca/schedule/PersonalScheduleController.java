@@ -1,5 +1,6 @@
 package project.coca.schedule;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,12 +38,12 @@ public class PersonalScheduleController {
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     public ApiResponse<PersonalScheduleResponse> add(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestPart("data") PersonalScheduleRequest request,
+            @Valid @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         String username = customUserDetails.getUsername();
         log.info("add Personal Schedule's username : {}", username);
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(username, request.getPersonalSchedule(), attachments);
+            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(username, request, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
         } catch (NoSuchElementException e) {
@@ -134,12 +135,12 @@ public class PersonalScheduleController {
     @PutMapping("/update")
     public ApiResponse<PersonalScheduleResponse> update(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestPart("data") PersonalScheduleRequest request,
+            @Valid @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         String username = customUserDetails.getUsername();
         try {
             PersonalSchedule savedSchedule =
-                    personalScheduleService.updatePersonalSchedule(username, request.getPersonalSchedule(), attachments);
+                    personalScheduleService.updatePersonalSchedule(username, request, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
         } catch (NoSuchElementException e) {

@@ -10,6 +10,7 @@ import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.domain.personal.PersonalScheduleAttachment;
 import project.coca.member.MemberRepository;
+import project.coca.schedule.request.PersonalScheduleRequest;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,19 +33,20 @@ public class PersonalScheduleService {
     /**
      * 09. 개인 일정 등록
      *
-     * @param personalSchedule : 작성한 개인 일정 id를 제외한 전체
+     * @param request : 작성한 개인 일정 요청 데이터
      * @return : 저장된 개인 일정 return
      * timer : 첨부파일이 없을때 9~11ms /
      */
     @ExeTimer
     @Transactional
     public PersonalSchedule savePersonalSchedule(String username,
-                                                 PersonalSchedule personalSchedule,
+                                                 PersonalScheduleRequest request,
                                                  MultipartFile[] attachments) throws IOException {
         Member foundMember = memberRepository.findById(username)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
-        // 일정에 회원 반영
+        // DTO를 Entity로 변환
+        PersonalSchedule personalSchedule = request.toEntity();
         personalSchedule.setMember(foundMember);
 
         // 일정 저장
@@ -86,20 +88,20 @@ public class PersonalScheduleService {
     @ExeTimer
     @Transactional
     public PersonalSchedule updatePersonalSchedule(String username,
-                                                   PersonalSchedule updatePersonalSchedule,
+                                                   PersonalScheduleRequest request,
                                                    MultipartFile[] attachments) throws IOException {
-        PersonalSchedule found = personalScheduleRepository.findById(updatePersonalSchedule.getId())
+        PersonalSchedule found = personalScheduleRepository.findById(request.getId())
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
 
         // 수정된 내용 반영
         found.update(
-                updatePersonalSchedule.getTitle(),
-                updatePersonalSchedule.getDescription(),
-                updatePersonalSchedule.getLocation(),
-                updatePersonalSchedule.getStartTime(),
-                updatePersonalSchedule.getEndTime(),
-                updatePersonalSchedule.getColor(),
-                updatePersonalSchedule.getIsPrivate()
+                request.getTitle(),
+                request.getDescription(),
+                request.getLocation(),
+                request.getStartTime(),
+                request.getEndTime(),
+                request.getColor(),
+                request.getIsPrivate()
         );
 
         // 기존 첨부 파일 삭제
@@ -118,7 +120,7 @@ public class PersonalScheduleService {
                 }
             }
         }
-        
+
         return found;
     }
 
