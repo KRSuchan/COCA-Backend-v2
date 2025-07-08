@@ -131,7 +131,7 @@ public class PersonalScheduleController {
      * @return : updated PersonalSchedule if not Exception
      * NOT_FOUND : memberId 혹은 scheduleId 로 조회가 되지 않는 경우
      */
-    @PutMapping("/update")
+    @PutMapping(value = "/update", consumes = {"multipart/form-data"})
     public ApiResponse<PersonalScheduleResponse> update(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @Valid @RequestPart("data") PersonalScheduleRequest request,

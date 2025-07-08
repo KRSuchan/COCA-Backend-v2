@@ -6,8 +6,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.auth.jwt.CustomUserDetails;
-import project.coca.auth.jwt.JwtRepository;
-import project.coca.auth.jwt.JwtTokenProvider;
 import project.coca.common.ApiResponse;
 import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
@@ -30,8 +28,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/group-schedule")
 public class GroupScheduleController {
     private final GroupScheduleService groupScheduleService;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final JwtRepository jwtRepository;
 
     /**
      * 그룹 일정 목록 조회
