@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -31,17 +32,18 @@ public class PersonalScheduleService {
     private final PersonalScheduleAttachmentRepository personalScheduleAttachmentRepository;
 
     /**
-     * 09. 개인 일정 등록
+     * 개인 일정 등록
      *
-     * @param request : 작성한 개인 일정 요청 데이터
-     * @return : 저장된 개인 일정 return
-     * timer : 첨부파일이 없을때 9~11ms /
+     * @param username    일정을 입력할 사용자의 아이디
+     * @param request     작성한 개인 일정 요청 데이터
+     * @param attachments 작성한 개인 일정의 첨부파일 nullable
+     * @return : added PersonalSchedule
      */
     @ExeTimer
     @Transactional
-    public PersonalSchedule savePersonalSchedule(String username,
-                                                 PersonalScheduleRequest request,
-                                                 MultipartFile[] attachments) throws IOException {
+    public PersonalSchedule add(String username,
+                                PersonalScheduleRequest request,
+                                MultipartFile[] attachments) throws IOException {
         Member foundMember = memberRepository.findById(username)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
@@ -64,32 +66,36 @@ public class PersonalScheduleService {
     }
 
     /**
-     * 10. 개인 일정 목록 조회 (요약 정보)
-     * 11. 개인 일정 상세 정보 조회 (목록으로 반환)
+     * 개인 일정 정보 조회
      *
-     * @param memberId 회원 계정 id
-     * @param start    기간 시작
-     * @param end      기간 끝
+     * @param username  회원 계정 id
+     * @param startDate 기간 시작
+     * @param endDate   기간 끝
      * @return List<PersonalSchedule>
      */
     @ExeTimer
-    public List<PersonalSchedule> findPersonalSchedulesByDates(String memberId, LocalDate start, LocalDate end) {
+    public List<PersonalSchedule> findByDates(String username, LocalDate startDate, LocalDate endDate) {
         // LocalDate 에서 LocalDateTime 변환
-        LocalDateTime startDT = start.atStartOfDay();
-        LocalDateTime endDT = end.atTime(LocalTime.of(23, 59, 59));
+        LocalDateTime startDT = startDate.atStartOfDay();
+        LocalDateTime endDT = endDate.atTime(LocalTime.of(23, 59, 59));
         // 기간 일정 목록 조회
-        return personalScheduleRepository.findPersonalScheduleByDateRange(memberId, startDT, endDT);
+        return personalScheduleRepository.findPersonalScheduleByDateRange(username, startDT, endDT);
     }
 
 
     /**
-     * 12. 개인 일정 수정
+     * 개인 일정 수정
+     *
+     * @param username    일정을 입력할 사용자의 아이디
+     * @param request     작성한 개인 일정 요청 데이터
+     * @param attachments 작성한 개인 일정에 등록할 첨부파일 nullable
+     * @return : updated PersonalSchedule
      */
     @ExeTimer
     @Transactional
-    public PersonalSchedule updatePersonalSchedule(String username,
-                                                   PersonalScheduleRequest request,
-                                                   MultipartFile[] attachments) throws IOException {
+    public PersonalSchedule update(String username,
+                                   PersonalScheduleRequest request,
+                                   MultipartFile[] attachments) throws IOException {
         PersonalSchedule found = personalScheduleRepository.findById(request.getId())
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
 
@@ -133,16 +139,19 @@ public class PersonalScheduleService {
                 .personalSchedule(personalSchedule)
                 .build();
         personalSchedule.getAttachments().add(personalScheduleAttachment);
-        log.info("총 저장된 첨부파일 {}", personalSchedule.getAttachments().size());
+        log.info("총 저장된 첨부파일 {}", Optional.of(personalSchedule.getAttachments().size()));
     }
 
     /**
-     * 13. 개인 일정 삭제
+     * 개인 일정 삭제
+     *
+     * @param username           일정을 입력할 사용자의 아이디
+     * @param personalScheduleId 작성한 개인 일정 요청 데이터
      */
     @ExeTimer
     @Transactional
-    public void deletePersonalScheduleById(String memberId, Long personalScheduleId) {
-        Member foundMember = memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않았습니다."));
+    public void deleteById(String username, Long personalScheduleId) {
+        Member foundMember = memberRepository.findById(username).orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않았습니다."));
 
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(personalScheduleId)
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않았습니다."));

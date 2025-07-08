@@ -28,12 +28,12 @@ public class PersonalScheduleController {
     private final PersonalScheduleService personalScheduleService;
 
     /**
-     * 09. 개인 일정 등록
+     * 개인 일정 등록
      *
-     * @param request 등록할 일정, 회원 id, 일정의 첨부파일
-     * @return ApiResponse
-     * NOT_FOUND: memberId로 회원이 조회되지 않는경우
-     * CREATED: 그 외 정상 등록한 일정 반환
+     * @param customUserDetails JWT에서 추출한 userDetails
+     * @param request           등록할 개인 일정
+     * @param attachments       일정에 추가한 첨부파일
+     * @return added PersonalSchedule
      */
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     public ApiResponse<PersonalScheduleResponse> add(
@@ -43,7 +43,7 @@ public class PersonalScheduleController {
         String username = customUserDetails.getUsername();
         log.info("add Personal Schedule's username : {}", username);
         try {
-            PersonalSchedule savedSchedule = personalScheduleService.savePersonalSchedule(username, request, attachments);
+            PersonalSchedule savedSchedule = personalScheduleService.add(username, request, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
         } catch (NoSuchElementException e) {
@@ -54,16 +54,15 @@ public class PersonalScheduleController {
     }
 
     /**
-     * 10. 개인 일정 목록 조회 (요약 정보)
+     * 개인 일정 목록 조회 (요약 정보)
      *
-     * @param startDate 예시 : 2024-05-01
-     * @param endDate   예시 : 2024-05-31
-     * @return ApiResponse
-     * NOT_FOUND: memberId로 회원이 조회되지 않는경우
-     * CREATED: 그 외 정상, 해당 기간 존재하는 일정 반환
+     * @param customUserDetails JWT에서 추출한 userDetails
+     * @param startDate         시작 일자 범위
+     * @param endDate           끝 일자 범위
+     * @return List<PersonalScheduleSummary> 일정 범위로 조회된 개인 일정 목록의 요약 정보
      */
     @GetMapping("/summary/between-dates")
-    public ApiResponse<List<PersonalScheduleSummaryResponse>> getSummeryList(
+    public ApiResponse<List<PersonalScheduleSummaryResponse>> getSummaryList(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
@@ -73,7 +72,7 @@ public class PersonalScheduleController {
         log.info("username : {}", username);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(username, startDate, endDate);
+                    personalScheduleService.findByDates(username, startDate, endDate);
             log.info("schedule cnt : {}", schedules.size());
             for (PersonalSchedule schedule : schedules) {
                 log.info("color : {}", schedule.getColor());
@@ -94,16 +93,14 @@ public class PersonalScheduleController {
     }
 
     /**
-     * 11. 개인 일정 상세 정보 조회
-     * (FrontEnd 요청사항으로 LIST 반환)
+     * 개인 일정 상세 정보 조회
      *
-     * @param date 예시 : 2024-05-01
-     * @return ApiResponse
-     * NOT_FOUND: memberId로 회원이 조회되지 않는 경우
-     * CREATED: 그 외 정상, 해당 기간 존재하는 일정 반환
+     * @param customUserDetails JWT에서 추출한 userDetails
+     * @param date              일정 상세를 조회할 상세 일자
+     * @return List<PersonalSchedule> 상세 일자로 조회된 상세 일정 리스트
      */
     @GetMapping("/detail")
-    public ApiResponse<List<PersonalScheduleResponse>> detail(
+    public ApiResponse<List<PersonalScheduleResponse>> getDetails(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate date) {
         log.info("Get personal schedules by dates: {}", date);
@@ -111,7 +108,7 @@ public class PersonalScheduleController {
         log.info("{}", username);
         try {
             List<PersonalSchedule> schedules =
-                    personalScheduleService.findPersonalSchedulesByDates(username, date, date);
+                    personalScheduleService.findByDates(username, date, date);
             List<PersonalScheduleResponse> data = schedules
                     .stream()
                     .map(PersonalScheduleResponse::of)
@@ -126,10 +123,12 @@ public class PersonalScheduleController {
     }
 
     /**
-     * 12. 개인 일정 수정
+     * 개인 일정 수정
      *
-     * @param request : 수정할 개인 일정 내용
-     * @return : 수정된 개인 일정 내용
+     * @param customUserDetails JWT에서 추출한 userDetails
+     * @param request           수정할 개인 일정
+     * @param attachments       일정에 추가한 첨부파일
+     * @return : updated PersonalSchedule if not Exception
      * NOT_FOUND : memberId 혹은 scheduleId 로 조회가 되지 않는 경우
      */
     @PutMapping("/update")
@@ -140,7 +139,7 @@ public class PersonalScheduleController {
         String username = customUserDetails.getUsername();
         try {
             PersonalSchedule savedSchedule =
-                    personalScheduleService.updatePersonalSchedule(username, request, attachments);
+                    personalScheduleService.update(username, request, attachments);
             PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
             return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
         } catch (NoSuchElementException e) {
@@ -154,7 +153,8 @@ public class PersonalScheduleController {
     /**
      * 13. 개인 일정 삭제
      *
-     * @param personalScheduleId : 삭제할 일정 id
+     * @param customUserDetails  JWT에서 추출한 userDetails
+     * @param personalScheduleId 삭제할 일정 id
      * @return ApiResponse
      * NOT_FOUND : memberId 혹은 personalScheduleId 로 회원이 조회되지 않는 경우
      * OK : 삭제 완료
@@ -165,7 +165,7 @@ public class PersonalScheduleController {
             @RequestParam Long personalScheduleId) {
         String username = customUserDetails.getUsername();
         try {
-            personalScheduleService.deletePersonalScheduleById(username, personalScheduleId);
+            personalScheduleService.deleteById(username, personalScheduleId);
             return ApiResponse.success(ResponseCode.OK, "삭제 성공");
         } catch (NoSuchElementException e) {
             // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우

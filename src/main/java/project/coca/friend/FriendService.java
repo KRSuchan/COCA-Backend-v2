@@ -53,7 +53,7 @@ public class FriendService {
         LocalDate now = LocalDate.now();
         LocalDate sevenDaysAgo = now.minusDays(6);
         LocalDate sevenDaysLater = now.plusDays(6);
-        return personalScheduleService.findPersonalSchedulesByDates(friend.getOpponent().getId(), sevenDaysAgo, sevenDaysLater);
+        return personalScheduleService.findByDates(friend.getOpponent().getId(), sevenDaysAgo, sevenDaysLater);
     }
 
     /**
