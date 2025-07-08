@@ -145,8 +145,10 @@ public class MemberService {
         try {
             jwtRepository.deleteValue(accessToken);
             jwtRepository.deleteValue(refreshToken);
+            log.info("success to logout");
             return true;
         } catch (Exception e) {
+            log.error("failed to logout");
             return false;
         }
     }
