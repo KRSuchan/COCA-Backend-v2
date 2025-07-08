@@ -20,35 +20,57 @@ public class JwtService {
 
     public TokenDto reissueToken(String accessToken, String refreshToken, HttpServletRequest request) {
         try {
-            // Refresh Token 검증
-            if (!jwtTokenProvider.validateToken(refreshToken, request)) {
-                throw new IllegalArgumentException("Invalid Refresh Token");
-            }
-            // Refresh Token 에서 username을 가져옴
-            String username = jwtRepository.getUsername(refreshToken);
-            Member member = memberRepository.findById(username).orElseThrow();
-            username = member.getId();
-            jwtRepository.deleteValue(accessToken);
-            jwtRepository.deleteValue(refreshToken);
-            // token 생성
-            String newAccessToken = jwtTokenProvider.createAccessToken(username);
-            String newRefreshToken = jwtTokenProvider.createRefreshToken(username);
-            // token 저장
-            jwtRepository.setValue(accessToken,
-                    new UserSession(username, Collections.singletonList(member.getRole())),
-                    properties.getAccessExpirationTime());
-            jwtRepository.setValue(refreshToken, username, properties.getRefreshExpirationTime());
-
-            UserSession session = jwtRepository.getSession(accessToken);
-            log.info("new session by reissued token :{}", session.toString());
-
-            log.info("New Access Token : {}", newAccessToken);
-            log.info("New Refresh Token : {}", newRefreshToken);
-            // 반환
-            return new TokenDto(newAccessToken, newRefreshToken);
+            validateRefreshToken(refreshToken, request);
+            Member member = getMemberFromRefreshToken(refreshToken);
+            revokeOldTokens(accessToken, refreshToken);
+            TokenDto newTokens = generateNewTokens(member);
+            storeNewTokens(newTokens, member);
+            logTokenReissue(newTokens.getAccessToken());
+            return newTokens;
         } catch (Exception e) {
             log.error("Token reissue failed: {}", e.getMessage());
             throw new IllegalArgumentException("Token 재발급 실패", e);
         }
+    }
+
+    private void validateRefreshToken(String refreshToken, HttpServletRequest request) {
+        if (!jwtTokenProvider.validateToken(refreshToken, request)) {
+            throw new IllegalArgumentException("Invalid Refresh Token");
+        }
+    }
+
+    private Member getMemberFromRefreshToken(String refreshToken) {
+        String username = jwtRepository.getUsername(refreshToken);
+        return memberRepository.findById(username)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+    }
+
+    private void revokeOldTokens(String accessToken, String refreshToken) {
+        jwtRepository.deleteValue(accessToken);
+        jwtRepository.deleteValue(refreshToken);
+    }
+
+    private TokenDto generateNewTokens(Member member) {
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+        return new TokenDto(newAccessToken, newRefreshToken);
+    }
+
+    private void storeNewTokens(TokenDto tokens, Member member) {
+        UserSession userSession = new UserSession(
+                member.getId(),
+                Collections.singletonList(member.getRole())
+        );
+
+        jwtRepository.setValue(tokens.getAccessToken(), userSession,
+                properties.getAccessExpirationTime());
+        jwtRepository.setValue(tokens.getRefreshToken(), member.getId(),
+                properties.getRefreshExpirationTime());
+    }
+
+    private void logTokenReissue(String newAccessToken) {
+        UserSession session = jwtRepository.getSession(newAccessToken);
+        log.info("new session by reissued token: {}", session);
+        log.info("New tokens generated successfully");
     }
 }
