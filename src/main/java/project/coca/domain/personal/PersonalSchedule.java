@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @Entity
 @ToString
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 public class PersonalSchedule {
     @Id
