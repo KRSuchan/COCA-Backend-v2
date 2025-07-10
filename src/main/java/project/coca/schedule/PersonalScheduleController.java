@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.auth.jwt.CustomUserDetails;
 import project.coca.common.ApiResponse;
-import project.coca.common.error.ErrorCode;
 import project.coca.common.success.ResponseCode;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.schedule.request.PersonalScheduleRequest;
@@ -17,7 +16,6 @@ import project.coca.schedule.response.PersonalScheduleSummaryResponse;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,15 +40,11 @@ public class PersonalScheduleController {
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         String username = customUserDetails.getUsername();
         log.info("add Personal Schedule's username : {}", username);
-        try {
-            PersonalSchedule savedSchedule = personalScheduleService.add(username, request, attachments);
-            PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
-            return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
-        } catch (NoSuchElementException e) {
-            return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어 있습니다.");
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+
+        PersonalSchedule savedSchedule = personalScheduleService.add(username, request, attachments);
+        PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
+
+        return ApiResponse.success(ResponseCode.CREATED, "개인 일정 등록 성공", data);
     }
 
     /**
@@ -66,30 +60,22 @@ public class PersonalScheduleController {
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
-        log.info("Start date: {}", startDate);
-        log.info("End date: {}", endDate);
         String username = customUserDetails.getUsername();
-        log.info("username : {}", username);
-        try {
-            List<PersonalSchedule> schedules =
-                    personalScheduleService.findByDates(username, startDate, endDate);
-            log.info("schedule cnt : {}", schedules.size());
-            for (PersonalSchedule schedule : schedules) {
-                log.info("color : {}", schedule.getColor());
-            }
-            List<PersonalScheduleSummaryResponse> data = schedules
-                    .stream()
-                    .map(PersonalScheduleSummaryResponse::of)
-                    .collect(Collectors.toList());
-            return ApiResponse.response(ResponseCode.OK, data);
-        } catch (NoSuchElementException e) {
-            // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
-            log.error("{}", e.getMessage());
-            return ApiResponse.fail(ErrorCode.NOT_FOUND, "조회되지 않는 데이터가 포함되어 있습니다.");
-        } catch (Exception e) {
-            log.error("{}", e.getMessage());
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        List<PersonalSchedule> schedules = personalScheduleService.findByDates(username, startDate, endDate);
+        log.info("""
+                Start date: {}
+                End date: {}
+                username : {}
+                found schedule cnt : {}
+                """, startDate, endDate, username, schedules.size());
+        for (PersonalSchedule schedule : schedules) {
+            log.info("color : {}", schedule.getColor());
         }
+        List<PersonalScheduleSummaryResponse> data = schedules
+                .stream()
+                .map(PersonalScheduleSummaryResponse::of)
+                .collect(Collectors.toList());
+        return ApiResponse.response(ResponseCode.OK, data);
     }
 
     /**
@@ -103,23 +89,17 @@ public class PersonalScheduleController {
     public ApiResponse<List<PersonalScheduleResponse>> getDetails(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam LocalDate date) {
-        log.info("Get personal schedules by dates: {}", date);
         String username = customUserDetails.getUsername();
+
+        log.info("Get personal schedules by dates: {}", date);
         log.info("{}", username);
-        try {
-            List<PersonalSchedule> schedules =
-                    personalScheduleService.findByDates(username, date, date);
-            List<PersonalScheduleResponse> data = schedules
-                    .stream()
-                    .map(PersonalScheduleResponse::of)
-                    .collect(Collectors.toList());
-            return ApiResponse.response(ResponseCode.OK, data);
-        } catch (NoSuchElementException e) {
-            // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
-            return ApiResponse.fail(ErrorCode.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+
+        List<PersonalSchedule> schedules = personalScheduleService.findByDates(username, date, date);
+        List<PersonalScheduleResponse> data = schedules
+                .stream()
+                .map(PersonalScheduleResponse::of)
+                .collect(Collectors.toList());
+        return ApiResponse.response(ResponseCode.OK, data);
     }
 
     /**
@@ -137,21 +117,13 @@ public class PersonalScheduleController {
             @Valid @RequestPart("data") PersonalScheduleRequest request,
             @RequestPart(value = "attachments", required = false) MultipartFile[] attachments) {
         String username = customUserDetails.getUsername();
-        try {
-            PersonalSchedule savedSchedule =
-                    personalScheduleService.update(username, request, attachments);
-            PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
-            return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
-        } catch (NoSuchElementException e) {
-            // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
-            return ApiResponse.fail(ErrorCode.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        PersonalSchedule savedSchedule = personalScheduleService.update(username, request, attachments);
+        PersonalScheduleResponse data = PersonalScheduleResponse.of(savedSchedule);
+        return ApiResponse.success(ResponseCode.OK, "개인 일정 수정 성공", data);
     }
 
     /**
-     * 13. 개인 일정 삭제
+     * 개인 일정 삭제
      *
      * @param customUserDetails  JWT에서 추출한 userDetails
      * @param personalScheduleId 삭제할 일정 id
@@ -164,14 +136,7 @@ public class PersonalScheduleController {
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long personalScheduleId) {
         String username = customUserDetails.getUsername();
-        try {
-            personalScheduleService.deleteById(username, personalScheduleId);
-            return ApiResponse.success(ResponseCode.OK, "삭제 성공");
-        } catch (NoSuchElementException e) {
-            // RequestParam 데이터로 검색되지 않은 데이터가 존재할 경우
-            return ApiResponse.fail(ErrorCode.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        personalScheduleService.deleteById(username, personalScheduleId);
+        return ApiResponse.success(ResponseCode.OK, "삭제 성공");
     }
 }

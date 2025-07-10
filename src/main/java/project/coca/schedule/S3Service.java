@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.coca.common.exception.FileUploadException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,7 @@ public class S3Service {
         this.s3Url = s3Url;
     }
 
-    private URL uploadFile(MultipartFile file, String key) throws IOException {
+    private URL uploadFile(MultipartFile file, String key) {
         try (InputStream inputStream = file.getInputStream()) {
             S3Resource s3Resource = s3Operations.upload(
                     BUCKET,
@@ -47,12 +48,12 @@ public class S3Service {
             System.err.println("🔴 Error in S3Service.uploadFile()");
             System.err.println(BUCKET);
             System.err.println(key);
-            throw new IOException("IO EXCEPTION IN S3Service.uploadFile()");
+            throw new FileUploadException("IO EXCEPTION IN S3Service.uploadFile()");
         }
     }
 
     @Transactional
-    public String uploadProfileImage(MultipartFile multipartFile, String memberId) throws IOException {
+    public String uploadProfileImage(MultipartFile multipartFile, String memberId) {
         if (!MediaType.IMAGE_PNG.toString().equals(multipartFile.getContentType()) &&
                 !MediaType.IMAGE_JPEG.toString().equals(multipartFile.getContentType())) {
             System.out.println("png, jpeg 파일만 업로드 가능합니다");
@@ -71,7 +72,7 @@ public class S3Service {
      * @throws IOException
      */
     @Transactional
-    public URL uploadPersonalScheduleFile(MultipartFile multipartFile, String memberId, Long personalScheduleId, int divisionNum) throws IOException {
+    public URL uploadPersonalScheduleFile(MultipartFile multipartFile, String memberId, Long personalScheduleId, int divisionNum) {
         String divider = "";
         if (divisionNum != 0) {
             divider = "(" + divisionNum + ") ";
@@ -88,7 +89,7 @@ public class S3Service {
      * @throws IOException
      */
     @Transactional
-    public URL uploadGroupScheduleFile(MultipartFile multipartFile, Long groupId, Long groupScheduleId, int divisionNum) throws IOException {
+    public URL uploadGroupScheduleFile(MultipartFile multipartFile, Long groupId, Long groupScheduleId, int divisionNum) {
         String divider = "";
         if (divisionNum != 0) {
             divider = "(" + divisionNum + ") ";

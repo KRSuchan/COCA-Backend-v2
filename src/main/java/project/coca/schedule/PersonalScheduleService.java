@@ -6,13 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import project.coca.aop.ExeTimer;
+import project.coca.common.exception.MemberNotFoundException;
+import project.coca.common.exception.ScheduleNotFoundException;
 import project.coca.domain.personal.Member;
 import project.coca.domain.personal.PersonalSchedule;
 import project.coca.domain.personal.PersonalScheduleAttachment;
 import project.coca.member.MemberRepository;
 import project.coca.schedule.request.PersonalScheduleRequest;
 
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,7 +44,7 @@ public class PersonalScheduleService {
     @Transactional
     public PersonalSchedule add(String username,
                                 PersonalScheduleRequest request,
-                                MultipartFile[] attachments) throws IOException {
+                                MultipartFile[] attachments) {
         Member foundMember = memberRepository.findById(username)
                 .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
 
@@ -95,7 +96,7 @@ public class PersonalScheduleService {
     @Transactional
     public PersonalSchedule update(String username,
                                    PersonalScheduleRequest request,
-                                   MultipartFile[] attachments) throws IOException {
+                                   MultipartFile[] attachments) {
         PersonalSchedule found = personalScheduleRepository.findById(request.getId())
                 .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않습니다."));
 
@@ -131,7 +132,7 @@ public class PersonalScheduleService {
     }
 
 
-    private void saveAttachment(String username, PersonalSchedule personalSchedule, MultipartFile attachment) throws IOException {
+    private void saveAttachment(String username, PersonalSchedule personalSchedule, MultipartFile attachment) {
         URL savedUrl = s3Service.uploadPersonalScheduleFile(attachment, username, personalSchedule.getId(), 0);
         PersonalScheduleAttachment personalScheduleAttachment = PersonalScheduleAttachment.builder()
                 .fileName(attachment.getOriginalFilename())
@@ -151,10 +152,10 @@ public class PersonalScheduleService {
     @ExeTimer
     @Transactional
     public void deleteById(String username, Long personalScheduleId) {
-        Member foundMember = memberRepository.findById(username).orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않았습니다."));
+        Member foundMember = memberRepository.findById(username).orElseThrow(() -> new MemberNotFoundException("회원이 조회되지 않았습니다."));
 
         PersonalSchedule foundPersonalSchedule = personalScheduleRepository.findById(personalScheduleId)
-                .orElseThrow(() -> new NoSuchElementException("일정이 조회되지 않았습니다."));
+                .orElseThrow(() -> new ScheduleNotFoundException("일정이 조회되지 않았습니다."));
 
         List<PersonalScheduleAttachment> files = personalScheduleAttachmentRepository.findByPersonalSchedule(foundPersonalSchedule);
         // 각 파일의 URL을 사용하여 S3에서 파일 삭제
