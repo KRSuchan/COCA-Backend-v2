@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-
 @RestController
 @RequestMapping("/api/s3")
 public class S3Controller {
@@ -21,13 +19,8 @@ public class S3Controller {
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile multipartFile, @RequestParam String key) {
-        try {
-            s3Service.uploadProfileImage(multipartFile, key);
-            return ResponseEntity.badRequest().body("이미지 업로드 중 오류가 발생했습니다");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body("이미지 업로드 중 오류가 발생했습니다");
-        }
+        s3Service.uploadProfileImage(multipartFile, key);
+        return ResponseEntity.badRequest().body("이미지 업로드 중 오류가 발생했습니다");
     }
 
 //    @GetMapping("/download")
