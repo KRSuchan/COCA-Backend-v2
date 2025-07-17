@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,8 +52,8 @@ public class MemberService {
     /**
      * 유저프로필URL 가져오기
      *
-     * @param memberId
-     * @return 회원 프로필 이미지 url
+     * @param memberId 회원 아이디
+     * @return String 회원 프로필 이미지 url
      */
     public String readProfileUrl(String memberId) {
         Member check = memberRepository.findById(memberId)
@@ -65,26 +65,25 @@ public class MemberService {
     /**
      * ID 중복 확인
      *
-     * @param id
+     * @param memberId 회원 아이디
      * @return 사용 가능(유니크) : true / 사용 불가(중복) : false
      */
-    public Boolean isUsable(String id) {
-        if (id == null || id.isEmpty()) {
-            return false;
-        }
-        return memberRepository.findById(id).isEmpty();
+    public Boolean isUsable(String memberId) {
+        if (memberId == null || memberId.isEmpty()) return false;
+        return memberRepository.findById(memberId).isEmpty();
     }
 
     /**
      * 로그인
      *
-     * @param loginMember
+     * @param id       로그인시 입력한 계정
+     * @param password 로그인시 입력한 비밀번호
      * @return TokenDto
      */
     @ExeTimer
-    public TokenDto login(MemberLoginRequest loginMember) {
+    public TokenDto login(String id, String password) {
         // Authentication 획득
-        Authentication authentication = getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+        Authentication authentication = getMemberAuthentication(id, password);
         // username 추출
         String username = authentication.getName();
         // roles 추천
@@ -92,7 +91,7 @@ public class MemberService {
         // token 생성
         String accessToken = jwtTokenProvider.createAccessToken(username);
         String refreshToken = jwtTokenProvider.createRefreshToken(username);
-        log.info("AET : {},\nRET : {}", jwtProperties.getAccessExpirationTime(), jwtProperties.getRefreshExpirationTime());
+        log.info("AET : {}ms, RET : {}ms", jwtProperties.getAccessExpirationTime(), jwtProperties.getRefreshExpirationTime());
         // token 저장
         jwtRepository.setValue(accessToken, new UserSession(username, roles), jwtProperties.getAccessExpirationTime());
         jwtRepository.setValue(refreshToken, username, jwtProperties.getRefreshExpirationTime());
@@ -106,15 +105,16 @@ public class MemberService {
     /**
      * 개인정보조회 전 비밀번호 확인
      *
-     * @param loginMember
+     * @param id       회원 계정
+     * @param password 회원이 입력한 비밀번호
      * @return 정상 입력 시 true, 비밀번호 오류 시 false
      * @throws AuthenticationException if authentication fails
      */
-    public Boolean checkMember(MemberLoginRequest loginMember) {
+    public Boolean checkMember(String id, String password) {
         try {
-            getMemberAuthentication(loginMember.getId(), loginMember.getPassword());
+            getMemberAuthentication(id, password);
             return true;
-        } catch (BadCredentialsException e) {// 비밀번호 틀림
+        } catch (UsernameNotFoundException e) {// 비밀번호 틀림
             return false;
         }
     }

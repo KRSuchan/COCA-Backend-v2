@@ -125,7 +125,7 @@ class MemberServiceTest {
         when(jwtTokenProvider.createRefreshToken(fakeAuthentication.getName())).thenReturn("refresh-token");
 
         //when
-        TokenDto tokenDto = memberService.login(request);
+        TokenDto tokenDto = memberService.login(request.getId(), request.getPassword());
 
         //then
         assertEquals("access-token", tokenDto.getAccessToken());

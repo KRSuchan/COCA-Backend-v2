@@ -3,7 +3,6 @@ package project.coca.member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,19 +77,7 @@ public class MemberController {
      */
     @PostMapping("/login")
     public ApiResponse<TokenDto> login(@RequestBody MemberLoginRequest loginMember) {
-        try {
-            return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember));
-        } catch (NoSuchElementException e) {
-            return ApiResponse.fail(ErrorCode.BAD_REQUEST, "동일한 아이디의 회원이 이미 존재합니다.");
-        } catch (BadCredentialsException e) {
-            return ApiResponse.fail(ErrorCode.BAD_REQUEST,
-                    """
-                            아이디(로그인 전용 아이디) 또는 비밀번호를 잘못 입력했습니다.
-                            입력하신 내용을 다시 확인해주세요.
-                            """);
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        return ApiResponse.response(ResponseCode.OK, memberService.login(loginMember.getId(), loginMember.getPassword()));
     }
 
     /**
@@ -98,11 +85,7 @@ public class MemberController {
      */
     @PostMapping("/checkPassword")
     public ApiResponse<Boolean> checkAccount(@RequestBody MemberLoginRequest loginMember) {
-        try {
-            return ApiResponse.response(ResponseCode.OK, memberService.checkMember(loginMember));
-        } catch (Exception e) {
-            return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        return ApiResponse.response(ResponseCode.OK, memberService.checkMember(loginMember.getId(), loginMember.getPassword()));
     }
 
     /**

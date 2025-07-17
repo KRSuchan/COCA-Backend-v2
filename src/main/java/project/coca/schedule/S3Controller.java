@@ -1,5 +1,6 @@
 package project.coca.schedule;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,14 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/s3")
+@RequiredArgsConstructor
 public class S3Controller {
 
     private final S3Service s3Service;
-
-    public S3Controller(S3Service s3Service) {
-        this.s3Service = s3Service;
-    }
-
+    
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile multipartFile, @RequestParam String key) {
         s3Service.uploadProfileImage(multipartFile, key);
