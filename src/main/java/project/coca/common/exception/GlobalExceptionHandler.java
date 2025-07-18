@@ -3,6 +3,7 @@ package project.coca.common.exception;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,10 +48,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<?> handleUsernameNotFoundException(UsernameNotFoundException e) {
         log.error("UsernameNotFoundException error occurred", e);
         return ApiResponse.fail(ErrorCode.BAD_REQUEST, "아이디 혹은 비밀번호를 잘못 입력하였습니다.");
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ApiResponse<?> handleBadCredentialsException(BadCredentialsException e) {
+        log.error("BadCredentialsException error occurred", e);
+        return ApiResponse.fail(ErrorCode.LOGIN_FAILED, "아이디 혹은 비밀번호를 잘못 입력하였습니다.");
     }
 
     @ExceptionHandler(ScheduleNotFoundException.class)

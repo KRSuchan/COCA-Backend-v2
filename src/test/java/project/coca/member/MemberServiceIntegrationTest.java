@@ -1,6 +1,9 @@
 package project.coca.member;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,9 +39,9 @@ class MemberServiceIntegrationTest {
         String password = "testPassword";
         String username = "testerName";
         ArrayList<InterestForTag> interestForTags = new ArrayList<>();
-        interestForTags.add(new InterestForTag(1L,"스프링"));
-        interestForTags.add(new InterestForTag(2L,"자바"));
-        interestForTags.add(new InterestForTag(3L,"리액트"));
+        interestForTags.add(new InterestForTag(1L, "스프링"));
+        interestForTags.add(new InterestForTag(2L, "자바"));
+        interestForTags.add(new InterestForTag(3L, "리액트"));
 
         Member member = new Member();
         member.setId(id);
@@ -82,6 +85,7 @@ class MemberServiceIntegrationTest {
         assertTrue(usable);
         assertEquals(!memberRepository.existsById(id), usable);
     }
+
     @Test
     @Order(3)
     public void 회원가입_사용불가능한ID() throws Exception {

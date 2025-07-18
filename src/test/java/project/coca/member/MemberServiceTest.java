@@ -9,16 +9,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import project.coca.auth.jwt.JwtTokenProvider;
-import project.coca.auth.jwt.TokenDto;
+import project.coca.auth.jwt.*;
 import project.coca.domain.personal.Member;
 import project.coca.domain.tag.Tag;
 import project.coca.member.request.MemberJoinRequest;
-import project.coca.member.request.MemberLoginRequest;
 import project.coca.member.response.InterestForTag;
 import project.coca.schedule.S3Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +37,10 @@ class MemberServiceTest {
     AuthenticationManager authenticationManager;
     @Mock
     JwtTokenProvider jwtTokenProvider;
+    @Mock
+    JwtRepository jwtRepository;
+    @Mock
+    JwtProperties jwtProperties;
     @Mock
     TagRepository tagRepository;
     @Mock
@@ -112,23 +115,31 @@ class MemberServiceTest {
 
     @Test
     public void 로그인_정상() throws Exception {
-        //given
-        MemberLoginRequest request = MemberLoginRequest.builder()
-                .id("testID")
-                .password("testPWD")
-                .build();
+        // given
+        String id = "tester";
+        String password = "1234";
+        String username = "tester";
+        List<String> roles = List.of("ROLE_USER");
+        String accessToken = "access-token";
+        String refreshToken = "refresh-token";
+        long accessExp = 3600000L;
+        long refreshExp = 1209600000L;
+
+        // mocking
         Authentication fakeAuthentication = mock(Authentication.class);
-        when(fakeAuthentication.getName()).thenReturn("testID");
-
         when(authenticationManager.authenticate(any())).thenReturn(fakeAuthentication);
-        when(jwtTokenProvider.createAccessToken(fakeAuthentication.getName())).thenReturn("access-token");
-        when(jwtTokenProvider.createRefreshToken(fakeAuthentication.getName())).thenReturn("refresh-token");
+        when(fakeAuthentication.getName()).thenReturn(username);
+        when(jwtTokenProvider.createAccessToken(username)).thenReturn(accessToken);
+        when(jwtTokenProvider.createRefreshToken(username)).thenReturn(refreshToken);
+        when(jwtProperties.getAccessExpirationTime()).thenReturn(accessExp);
+        when(jwtProperties.getRefreshExpirationTime()).thenReturn(refreshExp);
+        when(jwtRepository.getSession(accessToken)).thenReturn(new UserSession(username, roles));
+        
+        // when
+        TokenDto result = memberService.login(id, password);
 
-        //when
-        TokenDto tokenDto = memberService.login(request.getId(), request.getPassword());
-
-        //then
-        assertEquals("access-token", tokenDto.getAccessToken());
-        assertEquals("refresh-token", tokenDto.getRefreshToken());
+        // then
+        assertEquals(accessToken, result.getAccessToken());
+        assertEquals(refreshToken, result.getRefreshToken());
     }
 }
