@@ -1,13 +1,13 @@
 # 📅 COCA Backend
 
 이 프로젝트는 **COCA** 서비스의 백엔드 레포지토리입니다.  
-**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.  
+**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.
 
-배포 페이지 이동 : https://coca-project.site  
+배포 페이지 이동 : https://coca-project.site
 
-테스트 아이디|테스트 비밀번호
----|---|
-tester0000|tester0000
+ 테스트 아이디    | 테스트 비밀번호   
+------------|------------|
+ tester0000 | tester0000 
 
 ### 프로젝트 개요
 
@@ -64,8 +64,8 @@ COCA 백엔드에서 제공하는 API 명세서는 아래 Notion 페이지에서
 ```
 cocaBack/
     ├── src/main/java/project/coca
-        ├── auth        # 인증 관련 패키지
-        ├── common      # error, dto 양식 패키지
+        ├── aop         # AOP 관련 패키지
+        ├── base        # 공통 API 및 Exception 관련 패키지
         ├── friend      # 친구 관리 패키지
         ├── group       # 그룹 관리 패키지
         ├── member      # 회원 관리 패키지
