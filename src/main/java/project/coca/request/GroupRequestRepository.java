@@ -1,10 +1,8 @@
 package project.coca.request;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import project.coca.domain.group.CoGroup;
-import project.coca.domain.personal.Member;
-import project.coca.domain.request.GroupRequest;
-import project.coca.domain.request.RequestStatus;
+import project.coca.group.CoGroup;
+import project.coca.member.Member;
 
 import java.util.List;
 import java.util.Optional;

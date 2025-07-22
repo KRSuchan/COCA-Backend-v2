@@ -9,10 +9,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
-import project.coca.domain.personal.Member;
-import project.coca.domain.tag.Interest;
-import project.coca.member.request.MemberJoinRequest;
-import project.coca.member.response.InterestForTag;
+import project.coca.member.dto.MemberJoinRequest;
+import project.coca.tag.Interest;
+import project.coca.tag.dto.InterestForTag;
 
 import java.util.ArrayList;
 import java.util.List;

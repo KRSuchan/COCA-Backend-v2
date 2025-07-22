@@ -9,12 +9,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import project.coca.auth.jwt.*;
-import project.coca.domain.personal.Member;
-import project.coca.domain.tag.Tag;
-import project.coca.member.request.MemberJoinRequest;
-import project.coca.member.response.InterestForTag;
+import project.coca.jwt.JwtProperties;
+import project.coca.jwt.JwtRepository;
+import project.coca.jwt.JwtTokenProvider;
+import project.coca.jwt.UserSession;
+import project.coca.jwt.dto.TokenDto;
+import project.coca.member.dto.MemberJoinRequest;
 import project.coca.schedule.S3Service;
+import project.coca.tag.Tag;
+import project.coca.tag.TagRepository;
+import project.coca.tag.dto.InterestForTag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,7 +138,7 @@ class MemberServiceTest {
         when(jwtProperties.getAccessExpirationTime()).thenReturn(accessExp);
         when(jwtProperties.getRefreshExpirationTime()).thenReturn(refreshExp);
         when(jwtRepository.getSession(accessToken)).thenReturn(new UserSession(username, roles));
-        
+
         // when
         TokenDto result = memberService.login(id, password);
 

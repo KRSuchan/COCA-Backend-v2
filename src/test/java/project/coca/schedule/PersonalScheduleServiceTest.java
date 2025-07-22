@@ -6,10 +6,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import project.coca.domain.personal.Member;
-import project.coca.domain.personal.PersonalSchedule;
+import project.coca.member.Member;
 import project.coca.member.MemberRepository;
-import project.coca.schedule.request.PersonalScheduleRequest;
+import project.coca.schedule.personal.PersonalSchedule;
+import project.coca.schedule.personal.PersonalScheduleAttachmentRepository;
+import project.coca.schedule.personal.PersonalScheduleRepository;
+import project.coca.schedule.personal.PersonalScheduleService;
+import project.coca.schedule.personal.dto.PersonalScheduleRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

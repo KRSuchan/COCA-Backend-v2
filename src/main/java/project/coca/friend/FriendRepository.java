@@ -1,8 +1,7 @@
 package project.coca.friend;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import project.coca.domain.personal.Friend;
-import project.coca.domain.personal.Member;
+import project.coca.member.Member;
 
 import java.util.List;
 import java.util.Optional;

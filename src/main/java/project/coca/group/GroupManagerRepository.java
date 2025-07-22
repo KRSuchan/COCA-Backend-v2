@@ -3,9 +3,7 @@ package project.coca.group;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import project.coca.domain.group.CoGroup;
-import project.coca.domain.group.GroupManager;
-import project.coca.domain.personal.Member;
+import project.coca.member.Member;
 
 import java.util.Optional;
 

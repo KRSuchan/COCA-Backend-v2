@@ -5,9 +5,9 @@ import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import project.coca.auth.jwt.JwtFilter;
-import project.coca.auth.jwt.JwtRepository;
-import project.coca.auth.jwt.JwtTokenProvider;
+import project.coca.jwt.JwtFilter;
+import project.coca.jwt.JwtRepository;
+import project.coca.jwt.JwtTokenProvider;
 
 /**
  * JwtTokenProvider과 JwtFilter를 SecurityConfig에 적용

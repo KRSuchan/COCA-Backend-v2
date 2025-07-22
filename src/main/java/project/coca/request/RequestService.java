@@ -2,20 +2,14 @@ package project.coca.request;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.coca.common.exception.AlreadyReportedException;
-import project.coca.domain.group.CoGroup;
-import project.coca.domain.personal.Member;
-import project.coca.domain.personal.PersonalSchedule;
-import project.coca.domain.request.*;
+import project.coca.base.exception.AlreadyReportedException;
 import project.coca.friend.FriendRepository;
 import project.coca.friend.FriendService;
-import project.coca.group.GroupManagerRepository;
-import project.coca.group.GroupMemberRepository;
-import project.coca.group.GroupRepository;
-import project.coca.group.GroupService;
+import project.coca.group.*;
+import project.coca.member.Member;
 import project.coca.member.MemberRepository;
-import project.coca.schedule.PersonalScheduleRepository;
-import project.coca.schedule.ScheduleRequestRepository;
+import project.coca.schedule.personal.PersonalSchedule;
+import project.coca.schedule.personal.PersonalScheduleRepository;
 
 import java.util.ArrayList;
 import java.util.List;

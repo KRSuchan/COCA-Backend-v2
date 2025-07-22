@@ -8,7 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import project.coca.common.exception.FileUploadException;
+import project.coca.base.exception.FileUploadException;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -2,11 +2,10 @@ package project.coca.friend;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.coca.domain.personal.Friend;
-import project.coca.domain.personal.Member;
-import project.coca.domain.personal.PersonalSchedule;
+import project.coca.member.Member;
 import project.coca.member.MemberRepository;
-import project.coca.schedule.PersonalScheduleService;
+import project.coca.schedule.personal.PersonalSchedule;
+import project.coca.schedule.personal.PersonalScheduleService;
 
 import java.time.LocalDate;
 import java.util.List;

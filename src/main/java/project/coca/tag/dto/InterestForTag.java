@@ -1,0 +1,23 @@
+package project.coca.tag.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import project.coca.tag.Interest;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+public class InterestForTag {
+    private Long tagId;
+    private String tagName;
+
+    public static InterestForTag of(Interest interest) {
+        return InterestForTag.builder()
+                .tagId(interest.getTag().getId())
+                .tagName(interest.getTag().getName())
+                .build();
+    }
+}

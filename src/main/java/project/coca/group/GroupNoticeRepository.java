@@ -1,7 +1,6 @@
 package project.coca.group;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import project.coca.domain.group.GroupNotice;
 
 public interface GroupNoticeRepository extends JpaRepository<GroupNotice, Long> {
 
