@@ -1,7 +1,13 @@
-# 📅 COCA-v2 Backend
+# 📅 COCA Backend
 
-이 프로젝트는 **COCA-v2** 서비스의 백엔드입니다.
-**COCA-v2** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.
+이 프로젝트는 **COCA** 서비스의 백엔드 레포지토리입니다.  
+**COCA** 서비스의 프론트엔드는 [해당 링크](https://github.com//KRSuchan/COCA-Frontend-v2/)를 참고해주세요.  
+
+배포 페이지 이동 : https://coca-project.site  
+
+테스트 아이디|테스트 비밀번호
+---|---|
+tester0000|tester0000
 
 ### 프로젝트 개요
 
@@ -51,7 +57,7 @@ COCA 백엔드에서 제공하는 API 명세서는 아래 Notion 페이지에서
 
 ## 🖥️ 시스템 구조도
 
-![시스템구조도](https://github.com/user-attachments/assets/24f5f984-5380-4cfb-9127-7f36710438d3)
+![시스템구조도](https://github.com/user-attachments/assets/4734d09b-5f92-40fe-869d-8041faee4fec)
 
 ## 📂 프로젝트 구조
 
