@@ -58,6 +58,6 @@ public class PersonalScheduleRequest {
         if (startTime == null || endTime == null) {
             return true; // null 체크는 @NotNull에서 처리
         }
-        return endTime.isAfter(startTime);
+        return !endTime.isBefore(startTime);
     }
 }
