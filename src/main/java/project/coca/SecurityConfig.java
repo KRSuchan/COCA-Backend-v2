@@ -1,6 +1,8 @@
 package project.coca;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.actuate.audit.AuditEventRepository;
+import org.springframework.boot.actuate.audit.InMemoryAuditEventRepository;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuditEventRepository auditEventRepository() {
+        return new InMemoryAuditEventRepository();
+    }
+
+    @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (webSecurity) -> {
             webSecurity.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
@@ -45,6 +52,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JwtFilter jwtFilter() {
+        return new JwtFilter(jwtTokenProvider, jwtRepository);
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
@@ -53,6 +65,7 @@ public class SecurityConfig {
                 .sessionManagement((sessionManagement) ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/tag/all").permitAll()
                         .requestMatchers("/api/jwt/reissue").permitAll()
                         .requestMatchers("/api/member/validate-id").permitAll()
@@ -61,7 +74,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/healthcheck").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(jwtTokenProvider, jwtRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionConfig) -> exceptionConfig
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)

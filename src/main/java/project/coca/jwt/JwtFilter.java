@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 헤더(Authorization)에 있는 토큰을 꺼내 이상이 없는 경우 SecurityContext에 저장
@@ -22,8 +23,23 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/actuator",
+            "/api/tag/all",
+            "/api/jwt/reissue",
+            "/api/member/validate-id",
+            "/api/member/joinReq",
+            "/api/member/login",
+            "/api/healthcheck"
+    );
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtRepository jwtRepository;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+    }
 
     @Override
     protected void doFilterInternal(

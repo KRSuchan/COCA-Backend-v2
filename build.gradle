@@ -29,6 +29,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.0.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // actuator + micrometer + prometheus 모니터링 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // JWT (JSON Web Token) 라이브러리
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
