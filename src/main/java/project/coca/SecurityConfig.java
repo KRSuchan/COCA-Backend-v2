@@ -1,12 +1,14 @@
 package project.coca;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.actuate.audit.InMemoryAuditEventRepository;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +30,9 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtRepository jwtRepository;
+
+    @Value("${monitoring.token}")
+    private String monitoringToken;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -65,7 +70,11 @@ public class SecurityConfig {
                 .sessionManagement((sessionManagement) ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/**")
+                        .access((auth, ctx) -> {
+                            String token = ctx.getRequest().getHeader("Authorization");
+                            return new AuthorizationDecision(("Bearer " + monitoringToken).equals(token));
+                        })
                         .requestMatchers("/api/tag/all").permitAll()
                         .requestMatchers("/api/jwt/reissue").permitAll()
                         .requestMatchers("/api/member/validate-id").permitAll()
