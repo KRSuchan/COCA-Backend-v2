@@ -65,7 +65,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        log.info("[+] is this right token? :: {}", monitoringToken);
+        log.info("[+] is this right token? :: {}", monitoringToken.isEmpty() ? "null" : monitoringToken);
         http
                 .formLogin(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
