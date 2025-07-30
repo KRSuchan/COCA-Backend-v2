@@ -38,7 +38,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             default -> ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "Unexpected error occurred");
         };
 
-        log.error("Authentication error occurred: {}, {}", exceptionType, authException.getClass());
+        log.error("Authentication error occurred: {}, {}, {}", exceptionType, authException.getClass(), request.getRequestURI());
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 표준 상태 코드 설정
         response.setContentType("application/json;charset=UTF-8");
