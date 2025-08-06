@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import project.coca.base.exception.MemberNotFoundException;
+import project.coca.base.exception.ScheduleNotFoundException;
 import project.coca.member.Member;
 import project.coca.member.MemberRepository;
 import project.coca.schedule.personal.PersonalSchedule;
@@ -163,7 +165,7 @@ class PersonalScheduleServiceTest {
 
         // when & then
         assertThatThrownBy(() -> personalScheduleService.deleteById("testuser", 1L))
-                .isInstanceOf(NoSuchElementException.class)
+                .isInstanceOf(MemberNotFoundException.class)
                 .hasMessage("회원이 조회되지 않았습니다.");
     }
 
@@ -175,7 +177,7 @@ class PersonalScheduleServiceTest {
 
         // when & then
         assertThatThrownBy(() -> personalScheduleService.deleteById("testuser", 1L))
-                .isInstanceOf(NoSuchElementException.class)
+                .isInstanceOf(ScheduleNotFoundException.class)
                 .hasMessage("일정이 조회되지 않았습니다.");
     }
 }

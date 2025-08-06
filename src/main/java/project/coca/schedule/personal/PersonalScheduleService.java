@@ -45,7 +45,7 @@ public class PersonalScheduleService {
                                 PersonalScheduleRequest request,
                                 MultipartFile[] attachments) {
         Member foundMember = memberRepository.findById(username)
-                .orElseThrow(() -> new NoSuchElementException("회원이 조회되지 않습니다."));
+                .orElseThrow(() -> new MemberNotFoundException("회원이 조회되지 않습니다."));
 
         // DTO를 Entity로 변환
         PersonalSchedule personalSchedule = request.toEntity();

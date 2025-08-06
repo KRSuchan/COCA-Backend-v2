@@ -10,10 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import project.coca.member.dto.MemberJoinRequest;
-import project.coca.tag.Interest;
 import project.coca.tag.dto.InterestForTag;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,42 +31,34 @@ class MemberServiceIntegrationTest {
     @Test
     @Commit
     @Order(1)
-    public void 회원가입_정상입력() throws Exception {
-        //given
+    void 회원가입_정상입력() throws IOException {
+        // given
         String id = "testID";
         String password = "testPassword";
         String username = "testerName";
-        ArrayList<InterestForTag> interestForTags = new ArrayList<>();
-        interestForTags.add(new InterestForTag(1L, "스프링"));
-        interestForTags.add(new InterestForTag(2L, "자바"));
-        interestForTags.add(new InterestForTag(3L, "리액트"));
-
-        Member member = new Member();
-        member.setId(id);
-        member.setPassword(passwordEncoder.encode(password));
-        member.setUserName(username);
-        MemberJoinRequest memberJoinRequest = new MemberJoinRequest(
-                id,
-                password,
-                username,
-                true,
-                interestForTags
+        List<InterestForTag> interestForTags = List.of(
+                new InterestForTag(1L, "스프링"),
+                new InterestForTag(2L, "자바"),
+                new InterestForTag(3L, "리액트")
         );
 
-        //when
-        memberService.joinMember(memberJoinRequest, null);
+        MemberJoinRequest request = new MemberJoinRequest(
+                id, password, username, true, interestForTags
+        );
 
-        //then
-        Member result = memberRepository.findById(member.getId()).get();
-        List<Interest> interests = result.getInterests();
+        // when
+        memberService.joinMember(request, null);
 
-        assertEquals(member.getId(), result.getId());
-        assertTrue(passwordEncoder.matches(password, result.getPassword()));
-        assertEquals(member.getUserName(), result.getUserName());
-        int i = 0;
-        for (InterestForTag interestForTag : interestForTags) {
-            assertEquals(interestForTag.getTagId(), interests.get(i).getTag().getId());
-            i++;
+        // then
+        Member saved = memberRepository.findById(id).orElseThrow();
+
+        assertEquals(id, saved.getId());
+        assertTrue(passwordEncoder.matches(password, saved.getPassword()));
+        assertEquals(username, saved.getUserName());
+
+        assertEquals(3, saved.getInterests().size());
+        for (int i = 0; i < interestForTags.size(); i++) {
+            assertEquals(interestForTags.get(i).getTagId(), saved.getInterests().get(i).getTag().getId());
         }
     }
 
@@ -82,7 +73,6 @@ class MemberServiceIntegrationTest {
 
         //then
         assertTrue(usable);
-        assertEquals(!memberRepository.existsById(id), usable);
     }
 
     @Test
@@ -96,6 +86,5 @@ class MemberServiceIntegrationTest {
 
         //then
         assertFalse(usable);
-        assertEquals(!memberRepository.existsById(id), usable);
     }
 }

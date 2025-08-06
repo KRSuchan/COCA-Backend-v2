@@ -22,8 +22,7 @@ public interface PersonalScheduleRepository extends JpaRepository<PersonalSchedu
      * @return 회원 일정 목록
      */
     @Query("SELECT s FROM PersonalSchedule s WHERE s.member.id = :memberId AND " +
-            "(((s.startTime BETWEEN :startDate AND :endDate) OR (s.endTime BETWEEN :startDate AND :endDate)) OR " +
-            "((s.startTime < :startDate) AND (s.endTime > :endDate)))" +
+            ":startDate < s.endTime AND s.startTime < :endDate " +
             "ORDER BY s.startTime ASC")
     List<PersonalSchedule> findPersonalScheduleByDateRange(String memberId, LocalDateTime startDate, LocalDateTime endDate);
 }
